@@ -23,12 +23,16 @@
     "etl": "ts-node src/etl/index.ts",
     "etl:athletes": "ts-node src/etl/athletes.ts",
     "etl:boats": "ts-node src/etl/boats.ts",
-    "etl:practice-sessions": "ts-node src/etl/practice-sessions.ts"
+    "etl:practice-sessions": "ts-node src/etl/practice-sessions.ts",
+    "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
+    "check:config": "ts-node src/scripts/check-config.ts",
+    "debug:connection": "ts-node src/scripts/debug-connection.ts"
   },
   "keywords": [],
   "author": "Edwin Escobar",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "googleapis": "^162.0.0",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
