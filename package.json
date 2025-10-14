@@ -28,7 +28,14 @@
     "check:config": "ts-node src/scripts/check-config.ts",
     "debug:connection": "ts-node src/scripts/debug-connection.ts",
     "test:models": "ts-node src/scripts/test-models.ts",
-    "migrate:up": "ts-node src/scripts/run-migrations.ts"
+    "migrate:up": "ts-node src/scripts/run-migrations.ts",
+    "etl": "ts-node src/etl/index.ts",
+    "etl:full": "ts-node src/etl/index.ts full",
+    "etl:athletes": "ts-node src/etl/index.ts athletes",
+    "etl:boats": "ts-node src/etl/index.ts boats",
+    "etl:test": "ts-node src/etl/index.ts test",
+    "etl:validate": "ts-node src/etl/index.ts validate",
+    "etl:status": "ts-node src/etl/index.ts status"
   },
   "keywords": [],
   "author": "Edwin Escobar",
