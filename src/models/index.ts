@@ -10,6 +10,7 @@ import Attendance from './Attendance';
 import Lineup from './Lineup';
 import SeatAssignment from './SeatAssignment';
 import ETLJob from './ETLJob';
+import UsraCategory from './UsraCategory';
 
 // Define associations
 export function setupAssociations() {
@@ -148,6 +149,17 @@ export function setupAssociations() {
     foreignKey: 'head_coach_id',
     as: 'coached_teams'
   });
+
+  // Athlete -> UsraCategory (Many-to-One)
+  Athlete.belongsTo(UsraCategory, {
+    foreignKey: 'usra_age_category_id',
+    as: 'usra_age_category'
+  });
+
+  UsraCategory.hasMany(Athlete, {
+    foreignKey: 'usra_age_category_id',
+    as: 'athletes'
+  });
 }
 
 // Initialize associations
@@ -164,7 +176,8 @@ export {
   Attendance,
   Lineup,
   SeatAssignment,
-  ETLJob
+  ETLJob,
+  UsraCategory
 };
 
 export default sequelize;

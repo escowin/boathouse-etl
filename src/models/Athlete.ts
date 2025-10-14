@@ -21,6 +21,7 @@ interface AthleteAttributes {
   height_cm?: number;
   experience_years?: number;
   usra_age_category_2025?: string;
+  usra_age_category_id?: string;
   us_rowing_number?: string;
   emergency_contact?: string;
   emergency_contact_phone?: string;
@@ -36,7 +37,7 @@ interface AthleteCreationAttributes extends Optional<AthleteAttributes,
   'athlete_id' | 'first_name' | 'last_name' | 'email' | 'phone' | 'gender' | 
   'birth_year' | 'age' | 'sweep_scull' | 'port_starboard' | 'cox_capability' | 
   'bow_in_dark' | 'weight_kg' | 'height_cm' | 'experience_years' | 
-  'usra_age_category_2025' | 'us_rowing_number' | 'emergency_contact' | 
+  'usra_age_category_2025' | 'usra_age_category_id' | 'us_rowing_number' | 'emergency_contact' | 
   'emergency_contact_phone' | 'active' | 'created_at' | 'updated_at' | 
   'etl_source' | 'etl_last_sync'
 > {}
@@ -60,6 +61,7 @@ class Athlete extends Model<AthleteAttributes, AthleteCreationAttributes> implem
   public height_cm?: number;
   public experience_years?: number;
   public usra_age_category_2025?: string;
+  public usra_age_category_id?: string;
   public us_rowing_number?: string;
   public emergency_contact?: string;
   public emergency_contact_phone?: string;
@@ -171,6 +173,14 @@ Athlete.init(
     usra_age_category_2025: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    usra_age_category_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'usra_categories',
+        key: 'usra_category_id'
+      }
     },
     us_rowing_number: {
       type: DataTypes.TEXT,

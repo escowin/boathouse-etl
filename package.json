@@ -33,6 +33,7 @@
     "etl:full": "ts-node src/etl/index.ts full",
     "etl:athletes": "ts-node src/etl/index.ts athletes",
     "etl:boats": "ts-node src/etl/index.ts boats",
+    "etl:usra-categories": "ts-node src/etl/index.ts usra-categories",
     "etl:test": "ts-node src/etl/index.ts test",
     "etl:validate": "ts-node src/etl/index.ts validate",
     "etl:status": "ts-node src/etl/index.ts status",

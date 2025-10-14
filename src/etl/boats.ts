@@ -36,8 +36,8 @@ export class BoatsETL extends BaseETLProcess {
     console.log(`📊 Extracting boats data from sheet: ${this.config.sheetName}`);
     
     const data = await this.retry(async () => {
-      // Use explicit range like Rowcalibur: 'Boats!A1:Z'
-      return await this.sheetsService.getSheetData(this.config.sheetName, 'A1:Z');
+      // Use A1:E range for boats data (columns A-E only)
+      return await this.sheetsService.getSheetData(this.config.sheetName, 'A1:E');
     });
 
     console.log(`✅ Extracted ${data.length} boat records`);
@@ -77,6 +77,23 @@ export class BoatsETL extends BaseETLProcess {
       errors,
       warnings
     };
+  }
+
+  /**
+   * Convert GoogleSheetsRow to array format for processing
+   */
+  private convertRowToArray(row: GoogleSheetsRow): any[] {
+    // Convert the row object to an array format
+    // Assuming the row has properties like 'Boats', '', '', '', 'USRA Categories'
+    const array: any[] = [];
+    
+    // Map the row properties to array indices
+    // This is a simplified mapping - we'll need to adjust based on actual data structure
+    if (row['Boats'] !== undefined) array[0] = row['Boats'];
+    if (row[''] !== undefined) array[1] = row[''];
+    if (row['USRA Categories'] !== undefined) array[7] = row['USRA Categories'];
+    
+    return array;
   }
 
   /**

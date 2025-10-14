@@ -5,6 +5,7 @@
 import { BaseETLProcess } from './base-etl';
 import { AthletesETL } from './athletes';
 import { BoatsETL } from './boats';
+import { UsraCategoriesETL } from './usra-categories';
 import { DatabaseUtils } from '../utils/database';
 import { ETLJobConfig, ETLResult } from './types';
 
@@ -39,6 +40,13 @@ export class ETLOrchestrator {
     }));
 
     this.processes.set('boats', new BoatsETL({
+      batchSize: this.config.batchSize || 50,
+      retryAttempts: this.config.retryAttempts || 3,
+      retryDelayMs: this.config.retryDelayMs || 1000,
+      dryRun: this.config.dryRun || false
+    }));
+
+    this.processes.set('usra-categories', new UsraCategoriesETL({
       batchSize: this.config.batchSize || 50,
       retryAttempts: this.config.retryAttempts || 3,
       retryDelayMs: this.config.retryDelayMs || 1000,
