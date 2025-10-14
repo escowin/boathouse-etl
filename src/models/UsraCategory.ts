@@ -1,4 +1,4 @@
-import { DataTypes, Model, CreationAttributes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index';
 
 export interface UsraCategoryAttributes {
@@ -10,13 +10,13 @@ export interface UsraCategoryAttributes {
   updated_at: Date;
 }
 
-export interface UsraCategoryCreationAttributes extends CreationAttributes<UsraCategory> {
+export interface UsraCategoryCreationAttributes {
   start_age: number;
   end_age: number;
   category: string;
 }
 
-export class UsraCategory extends Model<UsraCategoryAttributes, UsraCategoryCreationAttributes> implements UsraCategoryAttributes {
+class UsraCategory extends Model<UsraCategoryAttributes, UsraCategoryCreationAttributes> implements UsraCategoryAttributes {
   public usra_category_id!: string;
   public start_age!: number;
   public end_age!: number;
@@ -89,3 +89,5 @@ UsraCategory.init(
     ]
   }
 );
+
+export default UsraCategory;

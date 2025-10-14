@@ -33,11 +33,12 @@ export class BoatsETL extends BaseETLProcess {
    * Extract boats data from Google Sheets
    */
   protected async extract(): Promise<GoogleSheetsRow[]> {
-    console.log(`📊 Extracting boats data from sheet: ${this.config.sheetName}`);
+    console.log(`📊 Extracting boats data from sheet: ${this.config.sheetName} (range A2:E71)`);
     
     const data = await this.retry(async () => {
-      // Use A1:E range for boats data (columns A-E only)
-      return await this.sheetsService.getSheetData(this.config.sheetName, 'A1:E');
+      // Use A2:E71 range: headers on row 2, boats data from rows 6-71
+      // This includes headers and all boat data in one call
+      return await this.sheetsService.getSheetData(this.config.sheetName, 'A2:E71');
     });
 
     console.log(`✅ Extracted ${data.length} boat records`);
@@ -54,9 +55,16 @@ export class BoatsETL extends BaseETLProcess {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    for (const row of data) {
+    // Skip the first 4 rows (A2-A5) which contain headers and empty rows
+    // Start from row 5 (index 4) which corresponds to A6 in the spreadsheet
+    const relevantData = data.slice(4);
+
+    // List of ignorable statuses to skip (like Rowcalibur)
+    const ignorableStatuses = ['Nationals', 'HOCR', 'Coach', 'Fast-A-Sleep', 'Strength'];
+
+    for (const row of relevantData) {
       try {
-        const boat = this.transformBoatRow(row);
+        const boat = this.transformBoatRow(row, ignorableStatuses);
         if (boat) {
           transformedData.push(boat);
         }
@@ -80,50 +88,181 @@ export class BoatsETL extends BaseETLProcess {
   }
 
   /**
+   * Transform a single boat row (following Rowcalibur's approach)
+   */
+  private transformBoatRow(row: GoogleSheetsRow, ignorableStatuses: string[]): any | null {
+    // Get the row data - we need to access by column index since we're using A2:E71 range
+    const rowArray = this.convertRowToArray(row);
+    
+    if (rowArray.length < 2) {
+      return null;
+    }
+
+    const name = String(rowArray[0] || '').trim();
+    const detailedType = String(rowArray[1] || '').trim();
+    const boatType = rowArray[2] ? String(rowArray[2]).trim() : ''; // Column C - Type (optional)
+    
+    // Skip empty rows
+    if (name === '' || detailedType === '') {
+      return null;
+    }
+    
+    // Skip ignorable statuses (like Rowcalibur)
+    if (ignorableStatuses.some(ignorable => detailedType.includes(ignorable))) {
+      return null;
+    }
+    
+    // Check if this is a pseudo-header row (e.g., "Eights", "Fours", "Quads", "Pairs", "Singles")
+    if (name === detailedType && ['Eights', 'Fours', 'Quads', 'Pairs', 'Singles'].includes(name)) {
+      // This is a pseudo-header row, determine the boat type
+      const typeMapping: { [key: string]: string } = {
+        'Eights': 'Eight',
+        'Fours': 'Four', 
+        'Quads': 'Quad',
+        'Pairs': 'Pair',
+        'Singles': 'Single'
+      };
+      
+      const actualType = typeMapping[name];
+      
+      return {
+        name: name,
+        // Skip status field - will use default 'Available' from database
+        type: actualType,
+        min_weight_kg: null,
+        max_weight_kg: null,
+        etl_source: 'google_sheets',
+        etl_last_sync: new Date()
+      };
+    }
+    
+    // Parse weight information from columns D (minWeight) and E (maxWeight)
+    let minWeight: number | null = null;
+    let maxWeight: number | null = null;
+    
+    // Column D (index 3) - minWeight
+    if (rowArray[3] && rowArray[3] !== '') {
+      const minWeightValue = parseFloat(String(rowArray[3]).trim());
+      if (!isNaN(minWeightValue)) {
+        minWeight = minWeightValue;
+      }
+    }
+    
+    // Column E (index 4) - maxWeight
+    if (rowArray[4] && rowArray[4] !== '') {
+      const maxWeightValue = parseFloat(String(rowArray[4]).trim());
+      if (!isNaN(maxWeightValue)) {
+        maxWeight = maxWeightValue;
+      }
+    }
+    
+    // Determine the actual boat type based on the Type column (Column C) first, then fall back to name/status analysis
+    let actualBoatType = '';
+    
+    // First, check the explicit Type column (Column C)
+    if (boatType === 'Double') {
+      actualBoatType = 'Double';
+    }
+    else if (boatType === 'Quad') {
+      actualBoatType = 'Quad';
+    }
+    else if (boatType === 'Pair') {
+      actualBoatType = 'Pair';
+    }
+    else if (boatType === 'Four') {
+      actualBoatType = 'Four';
+    }
+    else if (boatType === 'Eight') {
+      actualBoatType = 'Eight';
+    }
+    else if (boatType === 'Single') {
+      actualBoatType = 'Single';
+    }
+    // Fallback to name/status analysis if Type column doesn't match (like Rowcalibur)
+    else {
+      // Check if this is a double scull (2x) boat
+      if ((name || '').toLowerCase().includes('double') || 
+          (name || '').toLowerCase().includes('2x') || 
+          (detailedType || '').toLowerCase().includes('2x') ||
+          (detailedType || '').toLowerCase().includes('[2]') ||
+          name === 'Doubles') {
+        actualBoatType = 'Double';
+      }
+      // Check if this is a quad scull (4x) boat
+      else if ((name || '').toLowerCase().includes('quad') || 
+               (name || '').toLowerCase().includes('4x') || 
+               (detailedType || '').toLowerCase().includes('4x') ||
+               (detailedType || '').toLowerCase().includes('[q]') ||
+               name === 'Quads') {
+        actualBoatType = 'Quad';
+      }
+      // Check if this is a pair (2-) boat
+      else if ((name || '').toLowerCase().includes('pair') || 
+               (name || '').toLowerCase().includes('2-') || 
+               (detailedType || '').toLowerCase().includes('2-') ||
+               (detailedType || '').toLowerCase().includes('[p]') ||
+               name === 'Pairs') {
+        actualBoatType = 'Pair';
+      }
+      // Check if this is a four (4+) boat
+      else if ((name || '').toLowerCase().includes('four') || 
+               (name || '').toLowerCase().includes('4+') || 
+               (detailedType || '').toLowerCase().includes('4+') ||
+               (detailedType || '').toLowerCase().includes('[4]') ||
+               name === 'Fours') {
+        actualBoatType = 'Four';
+      }
+      // Check if this is an eight (8+) boat
+      else if ((name || '').toLowerCase().includes('eight') || 
+               (name || '').toLowerCase().includes('8+') || 
+               (detailedType || '').toLowerCase().includes('8+') ||
+               (detailedType || '').toLowerCase().includes('[8]') ||
+               name === 'Eights') {
+        actualBoatType = 'Eight';
+      }
+      // Check if this is a single (1x) boat
+      else if ((name || '').toLowerCase().includes('single') || 
+               (name || '').toLowerCase().includes('1x') || 
+               (detailedType || '').toLowerCase().includes('1x') ||
+               (detailedType || '').toLowerCase().includes('[1]') ||
+               name === 'Singles') {
+        actualBoatType = 'Single';
+      }
+    }
+    
+    // Skip if we couldn't determine the boat type
+    if (!actualBoatType) {
+      return null;
+    }
+    
+    return {
+      name: name || '',
+      // Skip status field - will use default 'Available' from database
+      type: actualBoatType,
+      min_weight_kg: minWeight,
+      max_weight_kg: maxWeight,
+      etl_source: 'google_sheets',
+      etl_last_sync: new Date()
+    };
+  }
+
+  /**
    * Convert GoogleSheetsRow to array format for processing
    */
   private convertRowToArray(row: GoogleSheetsRow): any[] {
     // Convert the row object to an array format
-    // Assuming the row has properties like 'Boats', '', '', '', 'USRA Categories'
+    // For boats data, we need to map the actual column headers
     const array: any[] = [];
     
-    // Map the row properties to array indices
-    // This is a simplified mapping - we'll need to adjust based on actual data structure
-    if (row['Boats'] !== undefined) array[0] = row['Boats'];
-    if (row[''] !== undefined) array[1] = row[''];
-    if (row['USRA Categories'] !== undefined) array[7] = row['USRA Categories'];
+    // Map the row properties to array indices based on the actual headers
+    // Headers: "", "Status", "Type", "Min Weight", "Max Weight"
+    if (row[''] !== undefined) array[0] = row['']; // Column A (boat name - empty header)
+    if (row['Status'] !== undefined) array[1] = row['Status']; // Column B (status)
+    if (row['Type'] !== undefined) array[2] = row['Type']; // Column C (type)
+    if (row['Min Weight'] !== undefined) array[3] = row['Min Weight']; // Column D (min weight)
+    if (row['Max Weight'] !== undefined) array[4] = row['Max Weight']; // Column E (max weight)
     
     return array;
-  }
-
-  /**
-   * Transform a single boat row
-   */
-  private transformBoatRow(row: GoogleSheetsRow): any | null {
-    // Required fields validation
-    if (!row['name'] || !row['type']) {
-      throw new Error(`Missing required fields: name=${row['name']}, type=${row['type']}`);
-    }
-
-    const boat: any = {
-      name: String(row['name']).trim(),
-      type: this.normalizeType(String(row['type']).trim()),
-    };
-
-    // Optional fields with transformation
-    if (row['status']) boat.status = this.normalizeStatus(String(row['status']).trim());
-    if (row['min_weight_kg']) boat.min_weight_kg = this.parseDecimal(row['min_weight_kg']);
-    if (row['max_weight_kg']) boat.max_weight_kg = this.parseDecimal(row['max_weight_kg']);
-    if (row['manufacturer']) boat.manufacturer = String(row['manufacturer']).trim();
-    if (row['year_built']) boat.year_built = this.parseInteger(row['year_built']);
-    if (row['rigging_type']) boat.rigging_type = String(row['rigging_type']).trim();
-    if (row['notes']) boat.notes = String(row['notes']).trim();
-
-    // ETL metadata
-    boat.etl_source = 'google_sheets';
-    boat.etl_last_sync = new Date();
-
-    return boat;
   }
 
   /**
@@ -151,9 +290,9 @@ export class BoatsETL extends BaseETLProcess {
         errors.push(`Row ${i + 1}: Invalid type '${boat.type}'`);
       }
 
-      // Status validation
-      if (boat.status && !['Available', 'Reserved', 'In Use', 'Maintenance', 'Retired'].includes(boat.status)) {
-        errors.push(`Row ${i + 1}: Invalid status '${boat.status}'`);
+      // Status validation - be more flexible since status contains boat names/descriptions
+      if (boat.status && typeof boat.status !== 'string') {
+        errors.push(`Row ${i + 1}: Status must be a string`);
       }
 
       // Weight validation
@@ -234,48 +373,4 @@ export class BoatsETL extends BaseETLProcess {
     return 'boats_sync';
   }
 
-  // Helper methods for data normalization
-  private normalizeType(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      'single': 'Single',
-      'double': 'Double',
-      'pair': 'Pair',
-      'quad': 'Quad',
-      'four': 'Four',
-      'eight': 'Eight',
-      '1x': 'Single',
-      '2x': 'Double',
-      '2-': 'Pair',
-      '4x': 'Quad',
-      '4+': 'Four',
-      '4-': 'Four',
-      '8+': 'Eight'
-    };
-    return typeMap[type.toLowerCase()] || type;
-  }
-
-  private normalizeStatus(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      'available': 'Available',
-      'reserved': 'Reserved',
-      'in use': 'In Use',
-      'maintenance': 'Maintenance',
-      'retired': 'Retired',
-      'active': 'Available',
-      'inactive': 'Maintenance'
-    };
-    return statusMap[status.toLowerCase()] || status;
-  }
-
-  private parseInteger(value: any): number | null {
-    if (value === null || value === undefined || value === '') return null;
-    const parsed = parseInt(String(value), 10);
-    return isNaN(parsed) ? null : parsed;
-  }
-
-  private parseDecimal(value: any): number | null {
-    if (value === null || value === undefined || value === '') return null;
-    const parsed = parseFloat(String(value));
-    return isNaN(parsed) ? null : parsed;
-  }
 }

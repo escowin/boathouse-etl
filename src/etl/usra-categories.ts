@@ -16,7 +16,8 @@ export class UsraCategoriesETL extends BaseETLProcess {
       batchSize: 50,
       retryAttempts: 3,
       retryDelayMs: 1000,
-      dryRun: false
+      dryRun: false,
+      primaryKey: 'usra_category_id'
     };
 
     super({ ...defaultConfig, ...config });
@@ -24,14 +25,15 @@ export class UsraCategoriesETL extends BaseETLProcess {
   }
 
   /**
-   * Extract USRA Categories data from Google Sheets (H:J range)
+   * Extract USRA Categories data from Google Sheets (H7:J18 range)
    */
   protected async extract(): Promise<GoogleSheetsRow[]> {
-    console.log(`📊 Extracting USRA Categories data from sheet: ${this.config.sheetName}`);
+    console.log(`📊 Extracting USRA Categories data from sheet: ${this.config.sheetName} (range H2:J18)`);
     
     const data = await this.retry(async () => {
-      // Use H:J range for USRA Categories data (like Rowcalibur uses H3:J18)
-      return await this.sheetsService.getSheetData(this.config.sheetName, 'H:J');
+      // Use H2:J18 range to include headers (H2:J2) and data (H7:J18)
+      // This ensures the Google Sheets service can properly map the columns
+      return await this.sheetsService.getSheetData(this.config.sheetName, 'H2:J18');
     });
 
     console.log(`✅ Extracted ${data.length} USRA Categories records`);
@@ -47,7 +49,11 @@ export class UsraCategoriesETL extends BaseETLProcess {
     const transformedData: any[] = [];
     const errors: string[] = [];
 
-    for (const row of data) {
+    // Skip the first 5 rows (H2-H6) which contain headers and empty rows
+    // Start from row 6 (index 5) which corresponds to H7 in the spreadsheet
+    const relevantData = data.slice(5);
+
+    for (const row of relevantData) {
       try {
         const category = this.transformUsraCategoryRow(row);
         if (category) {
@@ -63,7 +69,8 @@ export class UsraCategoriesETL extends BaseETLProcess {
     console.log(`✅ Transformed ${transformedData.length} USRA Categories records`);
     return {
       data: transformedData,
-      errors
+      errors,
+      warnings: []
     };
   }
 
@@ -71,42 +78,35 @@ export class UsraCategoriesETL extends BaseETLProcess {
    * Transform a single USRA Category row
    */
   private transformUsraCategoryRow(row: GoogleSheetsRow): any | null {
-    // Convert row to array format for processing
-    const rowArray = this.convertRowToArray(row);
-    
-    // Each row should have: [startAge, endAge, category]
-    if (rowArray.length >= 3 && !isNaN(Number(rowArray[0])) && !isNaN(Number(rowArray[1]))) {
-      const startAge = Number(rowArray[0]);
-      const endAge = Number(rowArray[1]);
-      const category = String(rowArray[2]).trim();
+    // Skip header rows
+    if (row['Start Age'] === 'Start Age' || row['Start Age'] === 'USRA Categories') {
+      return null;
+    }
 
-      if (startAge >= 0 && endAge >= startAge && category) {
+    // Check if we have valid data
+    const startAge = row['Start Age'];
+    const endAge = row['Upper Age'];
+    const category = row['USRA Category'];
+
+    // Validate that we have numeric values for ages and a category
+    if (startAge && endAge && category && 
+        !isNaN(Number(startAge)) && !isNaN(Number(endAge)) && 
+        String(category).trim() !== '') {
+      
+      const startAgeNum = Number(startAge);
+      const endAgeNum = Number(endAge);
+      const categoryStr = String(category).trim();
+
+      if (startAgeNum >= 0 && endAgeNum >= startAgeNum) {
         return {
-          start_age: startAge,
-          end_age: endAge,
-          category: category
+          start_age: startAgeNum,
+          end_age: endAgeNum,
+          category: categoryStr
         };
       }
     }
 
     return null;
-  }
-
-  /**
-   * Convert GoogleSheetsRow to array format for processing
-   */
-  private convertRowToArray(row: GoogleSheetsRow): any[] {
-    // Convert the row object to an array format
-    // For USRA Categories, we need to map the H, I, J columns
-    const array: any[] = [];
-    
-    // Map the row properties to array indices
-    // This is a simplified mapping - we'll need to adjust based on actual data structure
-    if (row['Start Age'] !== undefined) array[0] = row['Start Age'];
-    if (row['End Age'] !== undefined) array[1] = row['End Age'];
-    if (row['Category'] !== undefined) array[2] = row['Category'];
-    
-    return array;
   }
 
   /**
@@ -134,7 +134,8 @@ export class UsraCategoriesETL extends BaseETLProcess {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
+      warnings: []
     };
   }
 
@@ -153,7 +154,7 @@ export class UsraCategoriesETL extends BaseETLProcess {
       return { recordsCreated: data.length, recordsUpdated: 0, recordsFailed: 0 };
     }
 
-    await this.processBatch(data, async (batch) => {
+    await this.processBatch(data, this.config.batchSize, async (batch: any[]) => {
       for (const categoryData of batch) {
         try {
           // Check if category already exists
