@@ -26,7 +26,8 @@
     "etl:practice-sessions": "ts-node src/etl/practice-sessions.ts",
     "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
     "check:config": "ts-node src/scripts/check-config.ts",
-    "debug:connection": "ts-node src/scripts/debug-connection.ts"
+    "debug:connection": "ts-node src/scripts/debug-connection.ts",
+    "test:models": "ts-node src/scripts/test-models.ts"
   },
   "keywords": [],
   "author": "Edwin Escobar",
