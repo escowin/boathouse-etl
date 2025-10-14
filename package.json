@@ -31,12 +31,15 @@
   "dependencies": {
     "googleapis": "^162.0.0",
     "pg": "^8.16.3",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
     "typescript": "^5.9.3",
     "winston": "^3.18.3"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
     "@types/pg": "^8.15.5",
+    "@types/sequelize": "^4.28.20",
     "eslint": "^9.37.0",
     "jest": "^30.2.0",
     "prettier": "^3.6.2",
