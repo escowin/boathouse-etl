@@ -8,7 +8,7 @@ interface AttendanceAttributes {
   athlete_id: string;
   status: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused';
   notes?: string;
-  team_id: string;
+  team_id: number;
   created_at: Date;
   updated_at: Date;
   etl_source: string;
@@ -26,7 +26,7 @@ class Attendance extends Model<AttendanceAttributes, AttendanceCreationAttribute
   public athlete_id!: string;
   public status!: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused';
   public notes?: string;
-  public team_id!: string;
+  public team_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
   public etl_source!: string;
@@ -71,7 +71,7 @@ Attendance.init(
       allowNull: true,
     },
     team_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'teams',

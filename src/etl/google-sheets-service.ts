@@ -95,6 +95,29 @@ export class GoogleSheetsService {
   }
 
   /**
+   * Get raw sheet data without header processing
+   */
+  async getRawSheetData(sheetName: string, range?: string): Promise<any> {
+    try {
+      await this.ensureInitialized();
+      const fullRange = range ? `${sheetName}!${range}` : `${sheetName}!A1:Z`;
+      
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.spreadsheetId,
+        range: fullRange,
+        valueRenderOption: 'UNFORMATTED_VALUE',
+        dateTimeRenderOption: 'FORMATTED_STRING'
+      });
+
+      return response;
+      
+    } catch (error) {
+      console.error(`❌ Failed to get raw data from sheet ${sheetName}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get sheet metadata
    */
   async getSheetMetadata(): Promise<any> {

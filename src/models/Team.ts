@@ -3,10 +3,10 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface TeamAttributes {
-  team_id: string;
+  team_id: number;
   name: string;
   display_name: string;
-  team_type: 'Masters' | 'Juniors' | 'Seniors' | 'Recreational' | 'Competitive';
+  team_type: string;
   age_range_min?: number;
   age_range_max?: number;
   gender_focus?: 'M' | 'F' | 'Mixed';
@@ -27,10 +27,10 @@ interface TeamCreationAttributes extends Optional<TeamAttributes,
 > {}
 
 class Team extends Model<TeamAttributes, TeamCreationAttributes> implements TeamAttributes {
-  public team_id!: string;
+  public team_id!: number;
   public name!: string;
   public display_name!: string;
-  public team_type!: 'Masters' | 'Juniors' | 'Seniors' | 'Recreational' | 'Competitive';
+  public team_type!: string;
   public age_range_min?: number;
   public age_range_max?: number;
   public gender_focus?: 'M' | 'F' | 'Mixed';
@@ -50,8 +50,8 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> implements Team
 Team.init(
   {
     team_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
     name: {
@@ -64,7 +64,7 @@ Team.init(
       allowNull: false,
     },
     team_type: {
-      type: DataTypes.ENUM('Masters', 'Juniors', 'Seniors', 'Recreational', 'Competitive'),
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     age_range_min: {

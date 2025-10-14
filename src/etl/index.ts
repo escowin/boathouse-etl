@@ -54,6 +54,16 @@ async function main() {
         await orchestrator.runProcess('usra-categories');
         break;
 
+      case 'practice-sessions':
+        console.log('🔄 Running Practice Sessions ETL Process');
+        await orchestrator.runProcess('practice-sessions');
+        break;
+
+      case 'teams':
+        console.log('🔄 Running Teams ETL Process');
+        await orchestrator.runProcess('teams');
+        break;
+
       case 'test':
         console.log('🧪 Running ETL Test (Dry Run)');
         await orchestrator.testETL();
@@ -143,6 +153,8 @@ Commands:
   athletes      Run athletes ETL process only
   boats         Run boats ETL process only
   usra-categories Run USRA Categories ETL process only
+  practice-sessions Run Practice Sessions ETL process only
+  teams         Run Teams ETL process only
   test          Run ETL test (dry run)
   validate      Validate ETL configuration
   status        Get ETL status and statistics

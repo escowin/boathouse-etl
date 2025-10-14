@@ -4,7 +4,7 @@ import sequelize from '../config/database';
 // Define the attributes interface
 interface PracticeSessionAttributes {
   session_id: string;
-  team_id: string;
+  team_id: number;
   date: Date;
   start_time?: string;
   end_time?: string;
@@ -29,7 +29,7 @@ interface PracticeSessionCreationAttributes extends Optional<PracticeSessionAttr
 
 class PracticeSession extends Model<PracticeSessionAttributes, PracticeSessionCreationAttributes> implements PracticeSessionAttributes {
   public session_id!: string;
-  public team_id!: string;
+  public team_id!: number;
   public date!: Date;
   public start_time?: string;
   public end_time?: string;
@@ -57,7 +57,7 @@ PracticeSession.init(
       primaryKey: true,
     },
     team_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'teams',

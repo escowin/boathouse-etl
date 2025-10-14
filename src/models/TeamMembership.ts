@@ -4,7 +4,7 @@ import sequelize from '../config/database';
 // Define the attributes interface
 interface TeamMembershipAttributes {
   membership_id: string;
-  team_id: string;
+  team_id: number;
   athlete_id: string;
   role: 'Athlete' | 'Captain' | 'Secretary' | 'Coach' | 'Assistant Coach';
   start_date: Date;
@@ -21,7 +21,7 @@ interface TeamMembershipCreationAttributes extends Optional<TeamMembershipAttrib
 
 class TeamMembership extends Model<TeamMembershipAttributes, TeamMembershipCreationAttributes> implements TeamMembershipAttributes {
   public membership_id!: string;
-  public team_id!: string;
+  public team_id!: number;
   public athlete_id!: string;
   public role!: 'Athlete' | 'Captain' | 'Secretary' | 'Coach' | 'Assistant Coach';
   public start_date!: Date;
@@ -43,7 +43,7 @@ TeamMembership.init(
       primaryKey: true,
     },
     team_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'teams',

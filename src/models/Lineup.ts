@@ -6,7 +6,7 @@ interface LineupAttributes {
   lineup_id: string;
   session_id: string;
   boat_id: string;
-  team_id: string;
+  team_id: number;
   lineup_name?: string;
   lineup_type: 'Practice' | 'Race' | 'Test';
   total_weight_kg?: number;
@@ -29,7 +29,7 @@ class Lineup extends Model<LineupAttributes, LineupCreationAttributes> implement
   public lineup_id!: string;
   public session_id!: string;
   public boat_id!: string;
-  public team_id!: string;
+  public team_id!: number;
   public lineup_name?: string;
   public lineup_type!: 'Practice' | 'Race' | 'Test';
   public total_weight_kg?: number;
@@ -72,7 +72,7 @@ Lineup.init(
       onDelete: 'CASCADE',
     },
     team_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'teams',

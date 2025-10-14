@@ -6,6 +6,8 @@ import { BaseETLProcess } from './base-etl';
 import { AthletesETL } from './athletes';
 import { BoatsETL } from './boats';
 import { UsraCategoriesETL } from './usra-categories';
+import { PracticeSessionsETL } from './practice-sessions';
+import { TeamsETL } from './teams';
 import { DatabaseUtils } from '../utils/database';
 import { ETLJobConfig, ETLResult } from './types';
 
@@ -53,9 +55,19 @@ export class ETLOrchestrator {
       dryRun: this.config.dryRun || false
     }));
 
-    // Add more processes as they are created
-    // this.processes.set('teams', new TeamsETL({ ... }));
-    // this.processes.set('practice_sessions', new PracticeSessionsETL({ ... }));
+    this.processes.set('practice-sessions', new PracticeSessionsETL({
+      batchSize: this.config.batchSize || 50,
+      retryAttempts: this.config.retryAttempts || 3,
+      retryDelayMs: this.config.retryDelayMs || 1000,
+      dryRun: this.config.dryRun || false
+    }));
+
+    this.processes.set('teams', new TeamsETL({
+      batchSize: this.config.batchSize || 10,
+      retryAttempts: this.config.retryAttempts || 3,
+      retryDelayMs: this.config.retryDelayMs || 1000,
+      dryRun: this.config.dryRun || false
+    }));
   }
 
   /**
