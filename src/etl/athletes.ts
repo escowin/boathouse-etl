@@ -36,7 +36,8 @@ export class AthletesETL extends BaseETLProcess {
     console.log(`📊 Extracting athletes data from sheet: ${this.config.sheetName}`);
     
     const data = await this.retry(async () => {
-      return await this.sheetsService.getSheetData(this.config.sheetName);
+      // Use explicit range like Rowcalibur: 'Rowers!A1:Z'
+      return await this.sheetsService.getSheetData(this.config.sheetName, 'A1:Z');
     });
 
     console.log(`✅ Extracted ${data.length} athlete records`);

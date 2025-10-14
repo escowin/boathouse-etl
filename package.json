@@ -35,7 +35,9 @@
     "etl:boats": "ts-node src/etl/index.ts boats",
     "etl:test": "ts-node src/etl/index.ts test",
     "etl:validate": "ts-node src/etl/index.ts validate",
-    "etl:status": "ts-node src/etl/index.ts status"
+    "etl:status": "ts-node src/etl/index.ts status",
+    "test:sheets-data": "ts-node src/scripts/test-google-sheets-data.ts",
+    "debug:sheets": "ts-node src/scripts/debug-google-sheets.ts"
   },
   "keywords": [],
   "author": "Edwin Escobar",

@@ -53,7 +53,8 @@ export class GoogleSheetsService {
   async getSheetData(sheetName: string, range?: string): Promise<GoogleSheetsRow[]> {
     try {
       await this.ensureInitialized();
-      const fullRange = range ? `${sheetName}!${range}` : sheetName;
+      // Use explicit range format like Rowcalibur: 'SheetName!A1:Z'
+      const fullRange = range ? `${sheetName}!${range}` : `${sheetName}!A1:Z`;
       
       console.log(`📊 Fetching data from sheet: ${fullRange}`);
       
@@ -256,5 +257,20 @@ export class GoogleSheetsService {
       console.error('❌ Google Sheets connection test failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Find column index by searching for possible header names (like Rowcalibur)
+   */
+  findColumnIndex(headerRow: any[], possibleNames: string[]): number {
+    for (let i = 0; i < headerRow.length; i++) {
+      const header = String(headerRow[i] || '').toLowerCase();
+      for (const name of possibleNames) {
+        if (header.includes(name.toLowerCase())) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 }
