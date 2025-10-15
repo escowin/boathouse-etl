@@ -16,6 +16,14 @@ import Regatta from './Regatta';
 import RegattaRegistration from './RegattaRegistration';
 import Race from './Race';
 import ErgTest from './ErgTest';
+// Rowcalibur models
+import Gauntlet from './Gauntlet';
+import GauntletMatch from './GauntletMatch';
+import GauntletLineup from './GauntletLineup';
+import GauntletSeatAssignment from './GauntletSeatAssignment';
+import Ladder from './Ladder';
+import LadderPosition from './LadderPosition';
+import LadderProgression from './LadderProgression';
 
 // Define associations
 export function setupAssociations() {
@@ -243,6 +251,150 @@ export function setupAssociations() {
     foreignKey: 'athlete_id',
     as: 'athlete'
   });
+
+  // Rowcalibur Gauntlet System associations
+  // Athlete -> Gauntlet (One-to-Many) - created_by relationship
+  Athlete.hasMany(Gauntlet, {
+    foreignKey: 'created_by',
+    as: 'created_gauntlets'
+  });
+
+  Gauntlet.belongsTo(Athlete, {
+    foreignKey: 'created_by',
+    as: 'creator'
+  });
+
+  // Gauntlet -> GauntletMatch (One-to-Many)
+  Gauntlet.hasMany(GauntletMatch, {
+    foreignKey: 'gauntlet_id',
+    as: 'matches'
+  });
+
+  GauntletMatch.belongsTo(Gauntlet, {
+    foreignKey: 'gauntlet_id',
+    as: 'gauntlet'
+  });
+
+  // GauntletMatch -> GauntletLineup (One-to-Many) - two lineups per match
+  GauntletMatch.hasMany(GauntletLineup, {
+    foreignKey: 'match_id',
+    as: 'lineups'
+  });
+
+  GauntletLineup.belongsTo(GauntletMatch, {
+    foreignKey: 'match_id',
+    as: 'match'
+  });
+
+  // Boat -> GauntletLineup (One-to-Many)
+  Boat.hasMany(GauntletLineup, {
+    foreignKey: 'boat_id',
+    as: 'gauntlet_lineups'
+  });
+
+  GauntletLineup.belongsTo(Boat, {
+    foreignKey: 'boat_id',
+    as: 'boat'
+  });
+
+  // Team -> GauntletLineup (One-to-Many) - optional relationship
+  Team.hasMany(GauntletLineup, {
+    foreignKey: 'team_id',
+    as: 'gauntlet_lineups'
+  });
+
+  GauntletLineup.belongsTo(Team, {
+    foreignKey: 'team_id',
+    as: 'team'
+  });
+
+  // GauntletLineup -> GauntletSeatAssignment (One-to-Many)
+  GauntletLineup.hasMany(GauntletSeatAssignment, {
+    foreignKey: 'gauntlet_lineup_id',
+    as: 'seat_assignments'
+  });
+
+  GauntletSeatAssignment.belongsTo(GauntletLineup, {
+    foreignKey: 'gauntlet_lineup_id',
+    as: 'lineup'
+  });
+
+  // Athlete -> GauntletSeatAssignment (One-to-Many)
+  Athlete.hasMany(GauntletSeatAssignment, {
+    foreignKey: 'athlete_id',
+    as: 'gauntlet_seat_assignments'
+  });
+
+  GauntletSeatAssignment.belongsTo(Athlete, {
+    foreignKey: 'athlete_id',
+    as: 'athlete'
+  });
+
+  // Athlete -> Ladder (One-to-Many) - created_by relationship
+  Athlete.hasMany(Ladder, {
+    foreignKey: 'created_by',
+    as: 'created_ladders'
+  });
+
+  Ladder.belongsTo(Athlete, {
+    foreignKey: 'created_by',
+    as: 'creator'
+  });
+
+  // Ladder -> LadderPosition (One-to-Many)
+  Ladder.hasMany(LadderPosition, {
+    foreignKey: 'ladder_id',
+    as: 'positions'
+  });
+
+  LadderPosition.belongsTo(Ladder, {
+    foreignKey: 'ladder_id',
+    as: 'ladder'
+  });
+
+  // Athlete -> LadderPosition (One-to-Many)
+  Athlete.hasMany(LadderPosition, {
+    foreignKey: 'athlete_id',
+    as: 'ladder_positions'
+  });
+
+  LadderPosition.belongsTo(Athlete, {
+    foreignKey: 'athlete_id',
+    as: 'athlete'
+  });
+
+  // Ladder -> LadderProgression (One-to-Many)
+  Ladder.hasMany(LadderProgression, {
+    foreignKey: 'ladder_id',
+    as: 'progressions'
+  });
+
+  LadderProgression.belongsTo(Ladder, {
+    foreignKey: 'ladder_id',
+    as: 'ladder'
+  });
+
+  // Athlete -> LadderProgression (One-to-Many)
+  Athlete.hasMany(LadderProgression, {
+    foreignKey: 'athlete_id',
+    as: 'ladder_progressions'
+  });
+
+  LadderProgression.belongsTo(Athlete, {
+    foreignKey: 'athlete_id',
+    as: 'athlete'
+  });
+
+  // GauntletMatch -> LadderProgression (One-to-Many) - optional relationship
+  GauntletMatch.hasMany(LadderProgression, {
+    foreignKey: 'match_id',
+    as: 'ladder_progressions'
+  });
+
+  LadderProgression.belongsTo(GauntletMatch, {
+    foreignKey: 'match_id',
+    as: 'match'
+  });
 }
 
 // Initialize associations
@@ -265,7 +417,15 @@ export {
   Regatta,
   RegattaRegistration,
   Race,
-  ErgTest
+  ErgTest,
+  // Rowcalibur models
+  Gauntlet,
+  GauntletMatch,
+  GauntletLineup,
+  GauntletSeatAssignment,
+  Ladder,
+  LadderPosition,
+  LadderProgression
 };
 
 export default sequelize;

@@ -5,7 +5,7 @@ import sequelize from '../config/database';
 interface BoatAttributes {
   boat_id: string;
   name: string;
-  type: 'Single' | 'Double' | 'Pair' | 'Quad' | 'Four' | 'Eight';
+  type: '1x' | '2x' | '2-' | '4x' | '4+' | '8+';
   status: 'Available' | 'Reserved' | 'In Use' | 'Maintenance' | 'Retired';
   description?: string;
   min_weight_kg?: number;
@@ -28,7 +28,7 @@ interface BoatCreationAttributes extends Optional<BoatAttributes,
 class Boat extends Model<BoatAttributes, BoatCreationAttributes> implements BoatAttributes {
   public boat_id!: string;
   public name!: string;
-  public type!: 'Single' | 'Double' | 'Pair' | 'Quad' | 'Four' | 'Eight';
+  public type!: '1x' | '2x' | '2-' | '4x' | '4+' | '8+';
   public status!: 'Available' | 'Reserved' | 'In Use' | 'Maintenance' | 'Retired';
   public description?: string;
   public min_weight_kg?: number;
@@ -58,7 +58,7 @@ Boat.init(
       unique: true,
     },
     type: {
-      type: DataTypes.ENUM('Single', 'Double', 'Pair', 'Quad', 'Four', 'Eight'),
+      type: DataTypes.ENUM('1x', '2x', '2-', '4x', '4+', '8+'),
       allowNull: false,
     },
     status: {

@@ -93,7 +93,7 @@ CREATE TABLE boats (
     
     -- Basic Information
     name TEXT NOT NULL UNIQUE,
-    type TEXT NOT NULL CHECK (type IN ('Single', 'Double', 'Pair', 'Quad', 'Four', 'Eight')),
+    type TEXT NOT NULL CHECK (type IN ('1x', '2x', '2-', '4x', '4+', '8+')),
     status TEXT DEFAULT 'Available' CHECK (status IN ('Available', 'Reserved', 'In Use', 'Maintenance', 'Retired')),
     
     -- Physical Specifications
@@ -513,7 +513,7 @@ CREATE INDEX idx_mailing_lists_active ON mailing_lists(active);
 ```
 
 ### 15. Gauntlet System Tables
-For Rowcalibur's competitive system:
+For Rowcalibur's competitive system (using UUIDs for offline-first compatibility):
 
 ```sql
 CREATE TABLE gauntlets (
@@ -522,11 +522,14 @@ CREATE TABLE gauntlets (
     -- Gauntlet Details
     name TEXT NOT NULL,
     description TEXT,
-    boat_type TEXT NOT NULL,
+    boat_type TEXT NOT NULL CHECK (boat_type IN ('1x', '2x', '2-', '4x', '4+', '8+')),
     created_by UUID REFERENCES athletes(athlete_id),
     
-    -- Status
-    status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Completed', 'Cancelled')),
+    -- Status (enhanced to match IndexedDB)
+    status TEXT DEFAULT 'setup' CHECK (status IN ('setup', 'active', 'completed', 'cancelled')),
+    
+    -- Configuration (JSONB for flexible boat configuration)
+    configuration JSONB,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -538,22 +541,143 @@ CREATE TABLE gauntlet_matches (
     gauntlet_id UUID REFERENCES gauntlets(gauntlet_id) ON DELETE CASCADE,
     
     -- Match Details
+    workout TEXT NOT NULL, -- Description of the workout (e.g., "5k at 24 spm")
+    sets INTEGER NOT NULL, -- Number of sets in the workout
+    user_wins INTEGER NOT NULL DEFAULT 0, -- Number of sets the user won
+    user_losses INTEGER NOT NULL DEFAULT 0, -- Number of sets the user lost
     match_date DATE NOT NULL,
-    challenger_lineup_id UUID REFERENCES lineups(lineup_id),
-    defender_lineup_id UUID REFERENCES lineups(lineup_id),
     
-    -- Results
-    winner_lineup_id UUID REFERENCES lineups(lineup_id),
-    match_notes TEXT,
+    -- Additional Information
+    notes TEXT,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE gauntlet_lineups (
+    gauntlet_lineup_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    match_id UUID REFERENCES gauntlet_matches(match_id) ON DELETE CASCADE,
+    boat_id UUID REFERENCES boats(boat_id),
+    team_id INTEGER REFERENCES teams(team_id), -- Optional team context
+    lineup_name TEXT, -- e.g., "User Side", "Challenger Side"
+    side TEXT NOT NULL CHECK (side IN ('user', 'challenger')),
+    total_weight_kg DECIMAL(6, 2),
+    average_weight_kg DECIMAL(5, 2),
+    average_age DECIMAL(4, 1),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Ensure only one lineup per side per match
+    UNIQUE(match_id, side)
+);
+
+CREATE TABLE gauntlet_seat_assignments (
+    gauntlet_seat_assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gauntlet_lineup_id UUID REFERENCES gauntlet_lineups(gauntlet_lineup_id) ON DELETE CASCADE,
+    athlete_id UUID REFERENCES athletes(athlete_id),
+    seat_number INTEGER NOT NULL CHECK (seat_number >= 1 AND seat_number <= 8),
+    side TEXT NOT NULL CHECK (side IN ('port', 'starboard')),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Ensure only one athlete per seat per lineup
+    UNIQUE(gauntlet_lineup_id, seat_number)
+);
+
+CREATE TABLE ladders (
+    ladder_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Basic Information
+    name TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('1x', '2x', '2-', '4+', '8+')),
+    created_by UUID REFERENCES athletes(athlete_id),
+    
+    -- Settings (JSONB for flexible configuration)
+    settings JSONB NOT NULL DEFAULT '{}',
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ladder_positions (
+    position_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ladder_id UUID REFERENCES ladders(ladder_id) ON DELETE CASCADE,
+    athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
+    
+    -- Position Details
+    position INTEGER NOT NULL, -- 1-based position (1 = top of ladder)
+    previous_position INTEGER,
+    
+    -- Statistics
+    wins INTEGER DEFAULT 0,
+    losses INTEGER DEFAULT 0,
+    draws INTEGER DEFAULT 0,
+    win_rate DECIMAL(5,2) DEFAULT 0.00,
+    total_matches INTEGER DEFAULT 0,
+    points INTEGER DEFAULT 0,
+    
+    -- Streak Information
+    streak_type TEXT CHECK (streak_type IN ('win', 'loss', 'draw', 'none')),
+    streak_count INTEGER DEFAULT 0,
+    
+    -- Dates
+    last_match_date DATE,
+    joined_date DATE DEFAULT CURRENT_DATE,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Ensure one position per athlete per ladder
+    UNIQUE(ladder_id, athlete_id)
+);
+
+CREATE TABLE ladder_progressions (
+    progression_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ladder_id UUID REFERENCES ladders(ladder_id) ON DELETE CASCADE,
+    athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
+    
+    -- Progression Details
+    from_position INTEGER NOT NULL,
+    to_position INTEGER NOT NULL,
+    change INTEGER NOT NULL, -- Positive = moved up, Negative = moved down
+    reason TEXT NOT NULL CHECK (reason IN ('match_win', 'match_loss', 'match_draw', 'manual_adjustment', 'new_athlete')),
+    
+    -- Reference Information
+    match_id UUID REFERENCES gauntlet_matches(match_id),
+    notes TEXT,
+    
+    -- Metadata
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes
+CREATE INDEX idx_gauntlets_created_by ON gauntlets(created_by);
+CREATE INDEX idx_gauntlets_status ON gauntlets(status);
+CREATE INDEX idx_gauntlets_boat_type ON gauntlets(boat_type);
+
 CREATE INDEX idx_gauntlet_matches_gauntlet_id ON gauntlet_matches(gauntlet_id);
 CREATE INDEX idx_gauntlet_matches_match_date ON gauntlet_matches(match_date);
+
+CREATE INDEX idx_gauntlet_lineups_match_id ON gauntlet_lineups(match_id);
+CREATE INDEX idx_gauntlet_lineups_boat_id ON gauntlet_lineups(boat_id);
+CREATE INDEX idx_gauntlet_lineups_side ON gauntlet_lineups(side);
+
+CREATE INDEX idx_gauntlet_seat_assignments_lineup_id ON gauntlet_seat_assignments(gauntlet_lineup_id);
+CREATE INDEX idx_gauntlet_seat_assignments_athlete_id ON gauntlet_seat_assignments(athlete_id);
+CREATE INDEX idx_gauntlet_seat_assignments_seat_number ON gauntlet_seat_assignments(seat_number);
+
+CREATE INDEX idx_ladders_type ON ladders(type);
+CREATE INDEX idx_ladders_created_by ON ladders(created_by);
+
+CREATE INDEX idx_ladder_positions_ladder_id ON ladder_positions(ladder_id);
+CREATE INDEX idx_ladder_positions_athlete_id ON ladder_positions(athlete_id);
+CREATE INDEX idx_ladder_positions_position ON ladder_positions(position);
+
+CREATE INDEX idx_ladder_progressions_ladder_id ON ladder_progressions(ladder_id);
+CREATE INDEX idx_ladder_progressions_athlete_id ON ladder_progressions(athlete_id);
+CREATE INDEX idx_ladder_progressions_match_id ON ladder_progressions(match_id);
 ```
 
 ### 16. ETL Jobs Tracking Table
