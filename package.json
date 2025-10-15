@@ -44,7 +44,9 @@
     "clear:attendance": "ts-node src/scripts/clear-attendance.ts",
     "reset:attendance-sequence": "ts-node src/scripts/reset-attendance-sequence.ts",
     "migrate:boat-types": "ts-node src/scripts/run-boat-type-migration.ts",
-    "rollback:boat-types": "ts-node src/scripts/rollback-boat-type-migration.ts"
+    "rollback:boat-types": "ts-node src/scripts/rollback-boat-type-migration.ts",
+    "migrate:gauntlet-ladder": "ts-node src/scripts/run-gauntlet-ladder-migration.ts",
+    "rollback:gauntlet-ladder": "ts-node src/scripts/rollback-gauntlet-ladder-migration.ts"
   },
   "keywords": [],
   "author": "Edwin Escobar",

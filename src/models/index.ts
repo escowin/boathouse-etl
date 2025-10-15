@@ -275,15 +275,15 @@ export function setupAssociations() {
     as: 'gauntlet'
   });
 
-  // GauntletMatch -> GauntletLineup (One-to-Many) - two lineups per match
-  GauntletMatch.hasMany(GauntletLineup, {
-    foreignKey: 'match_id',
+  // Gauntlet -> GauntletLineup (One-to-Many)
+  Gauntlet.hasMany(GauntletLineup, {
+    foreignKey: 'gauntlet_id',
     as: 'lineups'
   });
 
-  GauntletLineup.belongsTo(GauntletMatch, {
-    foreignKey: 'match_id',
-    as: 'match'
+  GauntletLineup.belongsTo(Gauntlet, {
+    foreignKey: 'gauntlet_id',
+    as: 'gauntlet'
   });
 
   // Boat -> GauntletLineup (One-to-Many)

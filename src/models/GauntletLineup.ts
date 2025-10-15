@@ -4,36 +4,26 @@ import sequelize from '../config/database';
 // Define the attributes interface
 interface GauntletLineupAttributes {
   gauntlet_lineup_id: string;
-  match_id: string;
+  gauntlet_id: string;
   boat_id: string;
   team_id?: number;
-  lineup_name?: string;
-  side: 'user' | 'challenger';
-  total_weight_kg?: number;
-  average_weight_kg?: number;
-  average_age?: number;
-  notes?: string;
+  name: string;
+  description?: string;
   created_at: Date;
   updated_at: Date;
 }
 
-// Define the creation attributes
-interface GauntletLineupCreationAttributes extends Optional<GauntletLineupAttributes, 
-  'gauntlet_lineup_id' | 'team_id' | 'lineup_name' | 'total_weight_kg' | 'average_weight_kg' | 
-  'average_age' | 'notes' | 'created_at' | 'updated_at'
-> {}
+// Define the creation attributes interface
+interface GauntletLineupCreationAttributes extends Optional<GauntletLineupAttributes, 'gauntlet_lineup_id' | 'team_id' | 'description' | 'created_at' | 'updated_at'> {}
 
+// Define the model class
 class GauntletLineup extends Model<GauntletLineupAttributes, GauntletLineupCreationAttributes> implements GauntletLineupAttributes {
   public gauntlet_lineup_id!: string;
-  public match_id!: string;
+  public gauntlet_id!: string;
   public boat_id!: string;
   public team_id?: number;
-  public lineup_name?: string;
-  public side!: 'user' | 'challenger';
-  public total_weight_kg?: number;
-  public average_weight_kg?: number;
-  public average_age?: number;
-  public notes?: string;
+  public name!: string;
+  public description?: string;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -42,6 +32,7 @@ class GauntletLineup extends Model<GauntletLineupAttributes, GauntletLineupCreat
   public readonly updatedAt!: Date;
 }
 
+// Initialize the model
 GauntletLineup.init(
   {
     gauntlet_lineup_id: {
@@ -50,12 +41,12 @@ GauntletLineup.init(
       primaryKey: true,
       allowNull: false
     },
-    match_id: {
+    gauntlet_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'gauntlet_matches',
-        key: 'match_id'
+        model: 'gauntlets',
+        key: 'gauntlet_id'
       },
       onDelete: 'CASCADE'
     },
@@ -75,39 +66,11 @@ GauntletLineup.init(
         key: 'team_id'
       }
     },
-    lineup_name: {
+    name: {
       type: DataTypes.TEXT,
-      allowNull: true
-    },
-    side: {
-      type: DataTypes.ENUM('user', 'challenger'),
       allowNull: false
     },
-    total_weight_kg: {
-      type: DataTypes.DECIMAL(6, 2),
-      allowNull: true,
-      validate: {
-        min: 0,
-        max: 10000
-      }
-    },
-    average_weight_kg: {
-      type: DataTypes.DECIMAL(5, 2),
-      allowNull: true,
-      validate: {
-        min: 0,
-        max: 1000
-      }
-    },
-    average_age: {
-      type: DataTypes.DECIMAL(4, 1),
-      allowNull: true,
-      validate: {
-        min: 0,
-        max: 150
-      }
-    },
-    notes: {
+    description: {
       type: DataTypes.TEXT,
       allowNull: true
     },
@@ -131,17 +94,16 @@ GauntletLineup.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        fields: ['match_id']
+        name: 'idx_gauntlet_lineups_gauntlet_id',
+        fields: ['gauntlet_id']
       },
       {
+        name: 'idx_gauntlet_lineups_boat_id',
         fields: ['boat_id']
       },
       {
-        fields: ['side']
-      },
-      {
-        unique: true,
-        fields: ['match_id', 'side'] // Ensure only one lineup per side per match
+        name: 'idx_gauntlet_lineups_team_id',
+        fields: ['team_id']
       }
     ]
   }
