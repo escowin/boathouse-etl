@@ -83,7 +83,7 @@ function debugConnection() {
   
   console.log('\n💡 Troubleshooting Tips:');
   console.log('1. Make sure .env file is in the project root');
-  console.log('2. Check for any invisible characters in your password');
+  console.log('2. Check for any invisible characters in password');
   console.log('3. Try connecting with psql to verify credentials');
   console.log('4. Check if PostgreSQL is running on the correct port');
   console.log('5. Verify the database name exists');
