@@ -15,8 +15,6 @@ CREATE TABLE athletes (
     
     -- Basic Information
     name TEXT NOT NULL,
-    first_name TEXT,
-    last_name TEXT,
     email TEXT,
     phone TEXT,
     
@@ -24,21 +22,19 @@ CREATE TABLE athletes (
     type TEXT NOT NULL CHECK (type IN ('Cox', 'Rower', 'Rower & Coxswain')),
     gender CHAR(1) CHECK (gender IN ('M', 'F')),
     birth_year INTEGER,
-    age INTEGER,
     
     -- Rowing Skills & Preferences
     sweep_scull TEXT CHECK (sweep_scull IN ('Sweep', 'Scull', 'Sweep & Scull')),
     port_starboard TEXT CHECK (port_starboard IN ('Starboard', 'Prefer Starboard', 'Either', 'Prefer Port', 'Port')),
-    cox_capability TEXT CHECK (cox_capability IN ('No', 'Sometimes', 'Only')),
-    bow_in_dark TEXT CHECK (bow_in_dark IN ('Yes', 'No', 'If I have to')),
+    bow_in_dark BOOLEAN,
     
     -- Physical Attributes
     weight_kg DECIMAL(5,2),
-    height_cm DECIMAL(5,2),
+    height_cm INTEGER,
     
     -- Experience & Categories
     experience_years INTEGER,
-    usra_age_category_2025 TEXT,
+    usra_age_category_id INTEGER REFERENCES usra_categories(usra_category_id),
     us_rowing_number TEXT,
     
     -- Emergency Contact
@@ -75,10 +71,9 @@ CREATE TABLE boats (
     status TEXT DEFAULT 'Available' CHECK (status IN ('Available', 'Reserved', 'In Use', 'Maintenance', 'Retired')),
     
     -- Physical Specifications
+    description TEXT,
     min_weight_kg DECIMAL(5,2),
     max_weight_kg DECIMAL(5,2),
-    manufacturer TEXT,
-    year_built INTEGER,
     rigging_type TEXT,
     
     -- Additional Details
@@ -102,26 +97,17 @@ Define all teams within the boathouse:
 
 ```sql
 CREATE TABLE teams (
-    team_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id SERIAL PRIMARY KEY,
     
     -- Team Information
-    name TEXT NOT NULL UNIQUE, -- e.g., "Mens Masters", "Juniors Varsity"
-    display_name TEXT NOT NULL, -- e.g., "Men's Masters", "Juniors Varsity"
-    team_type TEXT NOT NULL CHECK (team_type IN ('Masters', 'Juniors', 'Seniors', 'Recreational', 'Competitive')),
-    
-    -- Team Details
-    age_range_min INTEGER,
-    age_range_max INTEGER,
-    gender_focus TEXT CHECK (gender_focus IN ('M', 'F', 'Mixed')),
-    skill_level TEXT CHECK (skill_level IN ('Beginner', 'Intermediate', 'Advanced', 'Elite')),
+    name TEXT NOT NULL, -- e.g., "Mens Masters", "Juniors Varsity"
+    team_type TEXT,
+    description TEXT,
     
     -- Team Management
     head_coach_id UUID REFERENCES athletes(athlete_id), -- Coach can be an athlete
     assistant_coaches UUID[], -- Array of coach athlete IDs
-    team_notes TEXT,
-    
-    -- Status
-    active BOOLEAN DEFAULT true,
+    mailing_list_id INTEGER REFERENCES mailing_lists(mailing_list_id),
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -131,7 +117,7 @@ CREATE TABLE teams (
 -- Indexes
 CREATE INDEX idx_teams_name ON teams(name);
 CREATE INDEX idx_teams_team_type ON teams(team_type);
-CREATE INDEX idx_teams_active ON teams(active);
+CREATE INDEX idx_teams_mailing_list_id ON teams(mailing_list_id);
 ```
 
 ### 4. Team Memberships Table
@@ -139,30 +125,26 @@ Track which athletes belong to which teams with different roles:
 
 ```sql
 CREATE TABLE team_memberships (
-    membership_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    membership_id SERIAL PRIMARY KEY,
+    team_id INTEGER REFERENCES teams(team_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
     -- Membership Details
-    role TEXT DEFAULT 'Athlete' CHECK (role IN ('Athlete', 'Captain', 'Secretary', 'Coach', 'Assistant Coach')),
-    start_date DATE DEFAULT CURRENT_DATE,
-    end_date DATE, -- NULL for current membership
-    
-    -- Status
-    active BOOLEAN DEFAULT true,
+    role TEXT DEFAULT 'Athlete' CHECK (role IN ('Athlete', 'Captain', 'Coach', 'Assistant Coach', 'Secretary')),
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    left_at TIMESTAMP, -- NULL for current membership
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    -- Ensure one active membership per athlete per team
-    UNIQUE(team_id, athlete_id, active) WHERE active = true
+    -- Ensure one membership per athlete per team
+    UNIQUE(team_id, athlete_id)
 );
 
 -- Indexes
 CREATE INDEX idx_team_memberships_team_id ON team_memberships(team_id);
 CREATE INDEX idx_team_memberships_athlete_id ON team_memberships(athlete_id);
-CREATE INDEX idx_team_memberships_active ON team_memberships(active);
 CREATE INDEX idx_team_memberships_role ON team_memberships(role);
 ```
 
@@ -177,29 +159,22 @@ Add team context to practice sessions:
 
 ```sql
 CREATE TABLE practice_sessions (
-    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    session_id SERIAL PRIMARY KEY,
+    team_id INTEGER REFERENCES teams(team_id) ON DELETE CASCADE,
     
     -- Session Details
     date DATE NOT NULL,
-    start_time TIME,
+    start_time TIME NOT NULL,
     end_time TIME,
     location TEXT,
-    session_type TEXT CHECK (session_type IN ('Practice', 'Scrimmage', 'Test', 'Regatta', 'Team Building')),
-    
-    -- Team-Specific Information
-    session_name TEXT, -- e.g., "Morning Practice", "Erg Test Day"
-    focus_area TEXT, -- e.g., "Technique", "Endurance", "Sprint Work"
+    session_type TEXT NOT NULL DEFAULT 'Practice' CHECK (session_type IN ('Practice', 'Race', 'Erg Test', 'Meeting', 'Other')),
     
     -- Additional Information
     notes TEXT,
-    weather_conditions TEXT,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    etl_source TEXT DEFAULT 'google_sheets',
-    etl_last_sync TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes
@@ -213,16 +188,16 @@ Team-specific attendance tracking:
 
 ```sql
 CREATE TABLE attendance (
-    attendance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
+    attendance_id SERIAL PRIMARY KEY,
+    session_id INTEGER REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
     -- Attendance Status
-    status TEXT NOT NULL CHECK (status IN ('Yes', 'No', 'Maybe', 'Late', 'Excused')),
+    status TEXT CHECK (status IN ('Yes', 'No', 'Maybe', 'Late', 'Excused')),
     notes TEXT,
     
     -- Team Context (denormalized for performance)
-    team_id UUID REFERENCES teams(team_id),
+    team_id INTEGER REFERENCES teams(team_id),
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -246,16 +221,16 @@ Team-specific lineup management:
 
 ```sql
 CREATE TABLE lineups (
-    lineup_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
+    lineup_id SERIAL PRIMARY KEY,
+    session_id INTEGER REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
     boat_id UUID REFERENCES boats(boat_id) ON DELETE CASCADE,
     
     -- Team Context
-    team_id UUID REFERENCES teams(team_id),
+    team_id INTEGER REFERENCES teams(team_id),
     
     -- Lineup Details
     lineup_name TEXT, -- e.g., "Varsity 8+", "Novice 4+"
-    lineup_type TEXT CHECK (lineup_type IN ('Practice', 'Race', 'Test')),
+    lineup_type TEXT NOT NULL CHECK (lineup_type IN ('Practice', 'Race', 'Test')),
     
     -- Performance Metrics
     total_weight_kg DECIMAL(6,2),
@@ -324,22 +299,17 @@ Detailed seat assignments within lineups:
 
 ```sql
 CREATE TABLE seat_assignments (
-    assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lineup_id UUID REFERENCES lineups(lineup_id) ON DELETE CASCADE,
+    seat_assignment_id SERIAL PRIMARY KEY,
+    lineup_id INTEGER REFERENCES lineups(lineup_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
     -- Seat Information
     seat_number INTEGER NOT NULL,
-    is_coxswain BOOLEAN DEFAULT false,
-    
-    -- Performance Notes
-    notes TEXT,
+    side TEXT CHECK (side IN ('Port', 'Starboard')),
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    etl_source TEXT DEFAULT 'google_sheets',
-    etl_last_sync TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Ensure one athlete per seat per lineup
     UNIQUE(lineup_id, seat_number)
@@ -468,31 +438,51 @@ For age category management:
 
 ```sql
 CREATE TABLE usra_categories (
-    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usra_category_id SERIAL PRIMARY KEY,
     
     -- Category Details
     start_age INTEGER NOT NULL,
     end_age INTEGER NOT NULL,
-    category_name TEXT NOT NULL,
-    gender TEXT CHECK (gender IN ('M', 'F', 'Mixed')),
-    
-    -- Additional Information
-    description TEXT,
-    notes TEXT,
+    category TEXT NOT NULL,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    etl_source TEXT DEFAULT 'google_sheets',
-    etl_last_sync TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes
-CREATE INDEX idx_usra_categories_age_range ON usra_categories(start_age, end_age);
-CREATE INDEX idx_usra_categories_name ON usra_categories(category_name);
+CREATE UNIQUE INDEX idx_usra_categories_unique ON usra_categories(start_age, end_age, category);
+CREATE INDEX idx_usra_categories_start_age ON usra_categories(start_age);
+CREATE INDEX idx_usra_categories_end_age ON usra_categories(end_age);
 ```
 
-### 14. Gauntlet System Tables
+### 14. Mailing Lists Table
+For team communication management:
+
+```sql
+CREATE TABLE mailing_lists (
+    mailing_list_id SERIAL PRIMARY KEY,
+    
+    -- Mailing List Details
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    description TEXT,
+    
+    -- Status
+    active BOOLEAN DEFAULT true,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE UNIQUE INDEX idx_mailing_lists_email ON mailing_lists(email);
+CREATE INDEX idx_mailing_lists_name ON mailing_lists(name);
+CREATE INDEX idx_mailing_lists_active ON mailing_lists(active);
+```
+
+### 15. Gauntlet System Tables
 For Rowcalibur's competitive system:
 
 ```sql
@@ -536,12 +526,12 @@ CREATE INDEX idx_gauntlet_matches_gauntlet_id ON gauntlet_matches(gauntlet_id);
 CREATE INDEX idx_gauntlet_matches_match_date ON gauntlet_matches(match_date);
 ```
 
-### 15. ETL Jobs Tracking Table
+### 16. ETL Jobs Tracking Table
 For monitoring data synchronization:
 
 ```sql
 CREATE TABLE etl_jobs (
-    job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id SERIAL PRIMARY KEY,
     
     -- Job Details
     job_type TEXT NOT NULL CHECK (job_type IN ('full_etl', 'incremental_etl', 'athletes_sync', 'boats_sync', 'attendance_sync')),
@@ -577,7 +567,7 @@ CREATE INDEX idx_etl_jobs_job_type ON etl_jobs(job_type);
 
 ## Boat Reservation System
 
-### 16. Boat Reservations Table
+### 17. Boat Reservations Table
 Track boat usage across teams:
 
 ```sql
