@@ -9,6 +9,7 @@ import { UsraCategoriesETL } from './usra-categories';
 import { PracticeSessionsETL } from './practice-sessions';
 import { TeamsETL } from './teams';
 import { AttendanceETL } from './attendance';
+import { LineupETL } from './lineup';
 import { DatabaseUtils } from '../utils/database';
 import { ETLJobConfig, ETLResult } from './types';
 
@@ -71,6 +72,13 @@ export class ETLOrchestrator {
     }));
 
     this.processes.set('attendance', new AttendanceETL({
+      batchSize: this.config.batchSize || 50,
+      retryAttempts: this.config.retryAttempts || 3,
+      retryDelayMs: this.config.retryDelayMs || 1000,
+      dryRun: this.config.dryRun || false
+    }));
+
+    this.processes.set('lineup', new LineupETL({
       batchSize: this.config.batchSize || 50,
       retryAttempts: this.config.retryAttempts || 3,
       retryDelayMs: this.config.retryDelayMs || 1000,

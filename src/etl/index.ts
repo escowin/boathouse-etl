@@ -69,6 +69,11 @@ async function main() {
         await orchestrator.runProcess('attendance');
         break;
 
+      case 'lineup':
+        console.log('🔄 Running Lineup ETL Process');
+        await orchestrator.runProcess('lineup');
+        break;
+
       case 'test':
         console.log('🧪 Running ETL Test (Dry Run)');
         await orchestrator.testETL();
@@ -161,6 +166,7 @@ Commands:
   practice-sessions Run Practice Sessions ETL process only
   teams         Run Teams ETL process only
   attendance    Run Attendance ETL process only
+  lineup        Run Lineup ETL process only
   test          Run ETL test (dry run)
   validate      Validate ETL configuration
   status        Get ETL status and statistics
