@@ -93,7 +93,7 @@ export class AttendanceETL extends BaseETLProcess {
     }
 
     // Extract practice sessions from session headers (same logic as PracticeSessionsETL)
-    const practiceSessions = this.extractPracticeSessions(sessionHeaders);
+    const practiceSessions = await this.extractPracticeSessions(sessionHeaders);
     
     // Get all athletes from database
     const athletes = await Athlete.findAll({
@@ -103,13 +103,18 @@ export class AttendanceETL extends BaseETLProcess {
     // Create athlete map using name field
     const athleteMap = new Map<string, any>();
     athletes.forEach(athlete => {
-      if (athlete.name) {
-        athleteMap.set(athlete.name.toLowerCase(), athlete);
+      const name = athlete.getDataValue('name');
+      if (name) {
+        athleteMap.set(name.toLowerCase(), athlete);
       }
     });
+    
+    console.log(`📊 Athlete map size: ${athleteMap.size}`);
+    console.log(`📊 First few athlete map keys:`, Array.from(athleteMap.keys()).slice(0, 5));
 
     console.log(`📊 Found ${athletes.length} athletes in database`);
-    console.log(`📊 Athlete names in database:`, athletes.map(a => a.name).slice(0, 5));
+    console.log(`📊 Athlete names in database:`, athletes.slice(0, 5).map(a => a.getDataValue('name')));
+    console.log(`📊 First athlete object:`, JSON.stringify(athletes[0], null, 2));
 
     // Process coxswains (rows 6-14)
     this.processAthleteRows(coxswainsData, practiceSessions, athleteMap, transformedData, errors, warnings, 6);
@@ -172,7 +177,7 @@ export class AttendanceETL extends BaseETLProcess {
       }
 
       if (rowIndex < 3) {
-        console.log(`✅ Matched "${athleteName}" to athlete ${athlete.athlete_id}`);
+        console.log(`✅ Matched "${athleteName}" to athlete ${athlete.getDataValue('athlete_id')}`);
       }
 
       // Process attendance for each practice session
@@ -204,7 +209,7 @@ export class AttendanceETL extends BaseETLProcess {
    * Extract practice sessions from session header rows
    * Reuses logic from PracticeSessionsETL
    */
-  private extractPracticeSessions(sessionRows: any[]): any[] {
+  private async extractPracticeSessions(sessionRows: any[]): Promise<any[]> {
     const sessions: any[] = [];
     
     const dateRow = sessionRows[0];    // E2:GI2 (dates like "January 1")
@@ -217,9 +222,26 @@ export class AttendanceETL extends BaseETLProcess {
     );
     
     for (let colIndex = 0; colIndex < maxLength; colIndex++) {
-      const session = this.transformSessionRow(dateRow, timeRow, datetimeRow, colIndex);
-      if (session) {
-        sessions.push(session);
+      const sessionData = this.transformSessionRow(dateRow, timeRow, datetimeRow, colIndex);
+      if (sessionData) {
+        // Find the actual practice session in the database
+        const practiceSession = await PracticeSession.findOne({
+          where: {
+            date: sessionData.date,
+            start_time: sessionData.start_time
+          }
+        });
+        
+        if (practiceSession) {
+          sessions.push({
+            session_id: practiceSession.getDataValue('session_id'),
+            date: sessionData.date,
+            start_time: sessionData.start_time,
+            end_time: sessionData.end_time
+          });
+        } else {
+          console.warn(`⚠️  Practice session not found in database: ${sessionData.date} ${sessionData.start_time}`);
+        }
       }
     }
 
@@ -267,8 +289,9 @@ export class AttendanceETL extends BaseETLProcess {
       sessionTime = parsed.time;
     }
 
-    if (!sessionTime || sessionTime.trim() === '') {
-      return null;
+    // Handle missing or invalid time values (HOC, empty, etc.)
+    if (!sessionTime || sessionTime.trim() === '' || sessionTime === 'HOC') {
+      sessionTime = '6:15 AM'; // Default time for missing values or HOC
     }
 
     return {
@@ -304,7 +327,12 @@ export class AttendanceETL extends BaseETLProcess {
     
     const date = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const sessionDate = new Date(date);
-    const time = String(timeCell || '').trim();
+    let time = String(timeCell || '').trim();
+    
+    // Handle missing or invalid time values (HOC, empty, etc.)
+    if (!time || time === 'HOC') {
+      time = '6:15 AM'; // Default time for missing values or HOC
+    }
 
     return {
       date: sessionDate,
@@ -330,7 +358,7 @@ export class AttendanceETL extends BaseETLProcess {
     }
 
     return {
-      athlete_id: athlete.athlete_id,
+      athlete_id: athlete.getDataValue('athlete_id'), // This is the UUID from our database
       session_date: session.date,
       session_start_time: session.start_time,
       status: status.status, // Can be null for no-response tracking
