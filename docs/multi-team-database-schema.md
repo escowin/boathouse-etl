@@ -4,6 +4,32 @@
 
 This schema extends the single-team design to support multiple teams within a boathouse (Mens Masters, Juniors Rec, Juniors Varsity, Babs, etc.) while maintaining shared resources and cross-team capabilities.
 
+## Design Decisions
+
+### Primary Key Strategy
+- **Athletes & Boats**: Uses UUID (`athlete_id`, `boats_id`) for global uniqueness across systems
+- **All other tables**: Use auto-increment integers (`SERIAL PRIMARY KEY`) for:
+  - Better performance in joins and queries
+  - Smaller storage footprint (4-8 bytes vs 16 bytes)
+  - Human-readable IDs for debugging and logs
+  - Simpler foreign key relationships
+
+### Scrimmage Handling
+- **In-club and joint-club scrimmages** are stored in the `regattas` table with `regatta_type = 'Scrimmage'`
+- This unified approach allows:
+  - Consistent data model across all competitive events
+  - Same registration and race tracking workflows
+  - Easy querying of all competitive activities
+  - Flexible categorization (can add 'Time Trial', 'Head Race', etc.)
+
+### Registration URL Field
+- Added `registration_url` to `regatta_registrations` table
+- Supports various registration systems:
+  - External regatta websites
+  - Private Google Sheets for club events
+  - Internal payment portals
+  - Joint-club registration systems
+
 ## Core Multi-Team Tables
 
 ### 1. Athletes Table
@@ -258,10 +284,10 @@ Team-specific regatta participation:
 
 ```sql
 CREATE TABLE regatta_registrations (
-    registration_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    regatta_id UUID REFERENCES regattas(regatta_id) ON DELETE CASCADE,
+    registration_id SERIAL PRIMARY KEY,
+    regatta_id INTEGER REFERENCES regattas(regatta_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
-    team_id UUID REFERENCES teams(team_id), -- Primary team for this regatta
+    team_id INTEGER REFERENCES teams(team_id), -- Primary team for this regatta
     
     -- Registration Status
     status TEXT NOT NULL CHECK (status IN ('Interested', 'Committed', 'Declined', 'Waitlisted')),
@@ -273,6 +299,9 @@ CREATE TABLE regatta_registrations (
     -- Coach Management
     coach_notes TEXT,
     coach_approved BOOLEAN DEFAULT false,
+    
+    -- Registration Information
+    registration_url TEXT, -- URL for payment/registration page
     
     -- Registration Timeline
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -333,7 +362,7 @@ For tracking competitions:
 
 ```sql
 CREATE TABLE regattas (
-    regatta_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    regatta_id SERIAL PRIMARY KEY,
     
     -- Basic Information
     name TEXT NOT NULL,
@@ -350,7 +379,7 @@ CREATE TABLE regattas (
     registration_notes TEXT,
     
     -- Additional Details
-    regatta_type TEXT CHECK (regatta_type IN ('Local', 'Regional', 'National', 'International')),
+    regatta_type TEXT CHECK (regatta_type IN ('Local', 'Regional', 'National', 'International', 'Scrimmage')),
     notes TEXT,
     
     -- Metadata
@@ -362,6 +391,7 @@ CREATE TABLE regattas (
 CREATE INDEX idx_regattas_name ON regattas(name);
 CREATE INDEX idx_regattas_start_date ON regattas(start_date);
 CREATE INDEX idx_regattas_registration_open ON regattas(registration_open);
+CREATE INDEX idx_regattas_regatta_type ON regattas(regatta_type);
 ```
 
 ### 11. Races Table
@@ -369,9 +399,9 @@ Individual race events within regattas:
 
 ```sql
 CREATE TABLE races (
-    race_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    regatta_id UUID REFERENCES regattas(regatta_id) ON DELETE CASCADE,
-    lineup_id UUID REFERENCES lineups(lineup_id),
+    race_id SERIAL PRIMARY KEY,
+    regatta_id INTEGER REFERENCES regattas(regatta_id) ON DELETE CASCADE,
+    lineup_id INTEGER REFERENCES lineups(lineup_id),
     
     -- Race Details
     event_name TEXT NOT NULL, -- e.g., "Men's 8+ Heat 1"
@@ -404,7 +434,7 @@ For tracking performance tests:
 
 ```sql
 CREATE TABLE erg_tests (
-    test_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    test_id SERIAL PRIMARY KEY,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
     -- Test Details

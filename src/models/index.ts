@@ -12,6 +12,10 @@ import SeatAssignment from './SeatAssignment';
 import ETLJob from './ETLJob';
 import UsraCategory from './UsraCategory';
 import MailingList from './MailingLists';
+import Regatta from './Regatta';
+import RegattaRegistration from './RegattaRegistration';
+import Race from './Race';
+import ErgTest from './ErgTest';
 
 // Define associations
 export function setupAssociations() {
@@ -172,6 +176,73 @@ export function setupAssociations() {
     foreignKey: 'mailing_list_id',
     as: 'teams'
   });
+
+  // Regatta associations
+  // Regatta -> RegattaRegistration (One-to-Many)
+  Regatta.hasMany(RegattaRegistration, {
+    foreignKey: 'regatta_id',
+    as: 'registrations'
+  });
+
+  RegattaRegistration.belongsTo(Regatta, {
+    foreignKey: 'regatta_id',
+    as: 'regatta'
+  });
+
+  // Athlete -> RegattaRegistration (One-to-Many)
+  Athlete.hasMany(RegattaRegistration, {
+    foreignKey: 'athlete_id',
+    as: 'regatta_registrations'
+  });
+
+  RegattaRegistration.belongsTo(Athlete, {
+    foreignKey: 'athlete_id',
+    as: 'athlete'
+  });
+
+  // Team -> RegattaRegistration (One-to-Many)
+  Team.hasMany(RegattaRegistration, {
+    foreignKey: 'team_id',
+    as: 'regatta_registrations'
+  });
+
+  RegattaRegistration.belongsTo(Team, {
+    foreignKey: 'team_id',
+    as: 'team'
+  });
+
+  // Regatta -> Race (One-to-Many)
+  Regatta.hasMany(Race, {
+    foreignKey: 'regatta_id',
+    as: 'races'
+  });
+
+  Race.belongsTo(Regatta, {
+    foreignKey: 'regatta_id',
+    as: 'regatta'
+  });
+
+  // Lineup -> Race (One-to-Many)
+  Lineup.hasMany(Race, {
+    foreignKey: 'lineup_id',
+    as: 'races'
+  });
+
+  Race.belongsTo(Lineup, {
+    foreignKey: 'lineup_id',
+    as: 'lineup'
+  });
+
+  // Athlete -> ErgTest (One-to-Many)
+  Athlete.hasMany(ErgTest, {
+    foreignKey: 'athlete_id',
+    as: 'erg_tests'
+  });
+
+  ErgTest.belongsTo(Athlete, {
+    foreignKey: 'athlete_id',
+    as: 'athlete'
+  });
 }
 
 // Initialize associations
@@ -190,7 +261,11 @@ export {
   SeatAssignment,
   ETLJob,
   UsraCategory,
-  MailingList
+  MailingList,
+  Regatta,
+  RegattaRegistration,
+  Race,
+  ErgTest
 };
 
 export default sequelize;
