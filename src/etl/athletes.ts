@@ -4,12 +4,12 @@
 
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
-import { Athlete } from '../models';
+import { Athlete, UsraCategory } from '../models';
+import { Op } from 'sequelize';
 import { 
   ETLProcessConfig, 
   DataTransformationResult, 
-  ETLValidationResult,
-  GoogleSheetsRow 
+  ETLValidationResult
 } from './types';
 
 export class AthletesETL extends BaseETLProcess {
@@ -17,7 +17,7 @@ export class AthletesETL extends BaseETLProcess {
 
   constructor(config?: Partial<ETLProcessConfig>) {
     const defaultConfig: ETLProcessConfig = {
-      sheetName: 'Athletes',
+      sheetName: 'Rowers',
       primaryKey: 'name',
       batchSize: 50,
       retryAttempts: 3,
@@ -32,36 +32,88 @@ export class AthletesETL extends BaseETLProcess {
   /**
    * Extract athletes data from Google Sheets
    */
-  protected async extract(): Promise<GoogleSheetsRow[]> {
+  protected async extract(): Promise<any[]> {
     console.log(`📊 Extracting athletes data from sheet: ${this.config.sheetName}`);
     
     const data = await this.retry(async () => {
-      // Use explicit range like Rowcalibur: 'Rowers!A1:Z'
-      return await this.sheetsService.getSheetData(this.config.sheetName, 'A1:Z');
+      // Use raw data approach like Rowcalibur - get raw rows without object conversion
+      const response = await this.sheetsService.getRawSheetData(this.config.sheetName, 'A1:Z');
+      return response.data.values || [];
     });
 
     console.log(`✅ Extracted ${data.length} athlete records`);
     return data;
   }
 
+
   /**
-   * Transform athletes data
+   * Transform athletes data using dynamic column detection (like Rowcalibur)
    */
-  protected async transform(data: GoogleSheetsRow[]): Promise<DataTransformationResult<any>> {
+  protected async transform(data: any[]): Promise<DataTransformationResult<any>> {
     console.log(`🔄 Transforming ${data.length} athlete records`);
     
     const transformedData: any[] = [];
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    for (const row of data) {
+    if (data.length < 2) {
+      errors.push('Insufficient data - need at least header row and one data row');
+      return { data: transformedData, errors, warnings };
+    }
+
+    const headerRow = data[0];
+    if (!headerRow) {
+      errors.push('No header row found');
+      return { data: transformedData, errors, warnings };
+    }
+    
+    // Use header row directly as array (like Rowcalibur)
+    const headerArray = headerRow;
+    
+    // Find column indices using dynamic detection (like Rowcalibur)
+    const nameCol = 0; // Column A is always name
+    const typeCol = this.findColumnIndex(headerArray, ['Type', 'Cox/Athlete', 'Role', 'Cox?']);
+    const genderCol = this.findColumnIndex(headerArray, ['Gender', 'Sex']);
+    const sweepScullCol = this.findColumnIndex(headerArray, ['Sweep/Scull', 'SweepScull', 'Style', 'Sweep & Scull']);
+    const portStarboardCol = this.findColumnIndex(headerArray, ['Port/Starboard', 'PortStarboard', 'Side', 'Port or Starboard?']);
+    const weightCol = this.findColumnIndex(headerArray, ['Weight', 'Wt', 'Approx Weight']);
+    const emailCol = this.findColumnIndex(headerArray, ['Email', 'E-mail']);
+    const phoneCol = this.findColumnIndex(headerArray, ['Phone', 'Tel', 'Phone number']);
+    const experienceCol = this.findColumnIndex(headerArray, ['Experience', 'Level', 'Total years rowing?']);
+    const birthYearCol = this.findColumnIndex(headerArray, ['Birth Year']);
+    const usRowingNumberCol = this.findColumnIndex(headerArray, ['US Rowing #', 'USRowing #']);
+    const emergencyContactCol = this.findColumnIndex(headerArray, ['Emergency Contact', 'Emergency Contacy']);
+    const emergencyContactPhoneCol = this.findColumnIndex(headerArray, ['Emergency Contact #', 'Emergency Contact Phone']);
+    const coxCol = this.findColumnIndex(headerArray, ['Cox?']);
+    const bowInDarkCol = this.findColumnIndex(headerArray, ['Bow in Dark?']);
+
+    // Debug: Log what columns were found
+    console.log(`🔍 Column detection results:`);
+    console.log(`  Header array:`, headerArray);
+    console.log(`  nameCol: ${nameCol}, typeCol: ${typeCol}, genderCol: ${genderCol}`);
+    console.log(`  weightCol: ${weightCol}, emailCol: ${emailCol}, phoneCol: ${phoneCol}`);
+    console.log(`  experienceCol: ${experienceCol}, birthYearCol: ${birthYearCol}`);
+    console.log(`  coxCol: ${coxCol}, bowInDarkCol: ${bowInDarkCol}`);
+
+    // Process each row starting from row 2 (index 1)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row) continue;
+
       try {
-        const athlete = this.transformAthleteRow(row);
+        // Use row directly as array (like Rowcalibur)
+        const rowArray = row;
+        const athlete = await this.transformAthleteRow(rowArray, {
+          nameCol, typeCol, genderCol, sweepScullCol, portStarboardCol, weightCol,
+          emailCol, phoneCol, experienceCol, birthYearCol, usRowingNumberCol,
+          emergencyContactCol, emergencyContactPhoneCol, coxCol, bowInDarkCol
+        });
+        
         if (athlete) {
           transformedData.push(athlete);
         }
       } catch (error) {
-        const errorMsg = `Failed to transform athlete row: ${error instanceof Error ? error.message : String(error)}`;
+        const errorMsg = `Failed to transform athlete row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`;
         errors.push(errorMsg);
         console.warn(`⚠️  ${errorMsg}`);
       }
@@ -80,38 +132,72 @@ export class AthletesETL extends BaseETLProcess {
   }
 
   /**
-   * Transform a single athlete row
+   * Transform a single athlete row using column indices
    */
-  private transformAthleteRow(row: GoogleSheetsRow): any | null {
-    // Required fields validation
-    if (!row['name'] || !row['type']) {
-      throw new Error(`Missing required fields: name=${row['name']}, type=${row['type']}`);
+  private async transformAthleteRow(row: any[], columnIndices: any): Promise<any | null> {
+    const name = row[columnIndices.nameCol];
+    
+    // Skip empty rows, header rows, and rows without a valid name
+    if (!name || name === 'Name' || name.trim() === '') {
+      return null;
     }
 
     const athlete: any = {
-      name: String(row['name']).trim(),
-      type: this.normalizeType(String(row['type']).trim()),
+      name: name.trim(),
+      type: this.parseType(row[columnIndices.typeCol]),
     };
 
     // Optional fields with transformation
-    if (row['first_name']) athlete.first_name = String(row['first_name']).trim();
-    if (row['last_name']) athlete.last_name = String(row['last_name']).trim();
-    if (row['email']) athlete.email = String(row['email']).trim().toLowerCase();
-    if (row['phone']) athlete.phone = String(row['phone']).trim();
-    if (row['gender']) athlete.gender = this.normalizeGender(String(row['gender']).trim());
-    if (row['birth_year']) athlete.birth_year = this.parseInteger(row['birth_year']);
-    if (row['age']) athlete.age = this.parseInteger(row['age']);
-    if (row['sweep_scull']) athlete.sweep_scull = this.normalizeSweepScull(String(row['sweep_scull']).trim());
-    if (row['port_starboard']) athlete.port_starboard = this.normalizePortStarboard(String(row['port_starboard']).trim());
-    if (row['cox_capability']) athlete.cox_capability = this.normalizeCoxCapability(String(row['cox_capability']).trim());
-    if (row['bow_in_dark']) athlete.bow_in_dark = this.normalizeBowInDark(String(row['bow_in_dark']).trim());
-    if (row['weight_kg']) athlete.weight_kg = this.parseDecimal(row['weight_kg']);
-    if (row['height_cm']) athlete.height_cm = this.parseDecimal(row['height_cm']);
-    if (row['experience_years']) athlete.experience_years = this.parseInteger(row['experience_years']);
-    if (row['usra_age_category_2025']) athlete.usra_age_category_2025 = String(row['usra_age_category_2025']).trim();
-    if (row['us_rowing_number']) athlete.us_rowing_number = String(row['us_rowing_number']).trim();
-    if (row['emergency_contact']) athlete.emergency_contact = String(row['emergency_contact']).trim();
-    if (row['emergency_contact_phone']) athlete.emergency_contact_phone = String(row['emergency_contact_phone']).trim();
+    if (columnIndices.emailCol !== -1 && row[columnIndices.emailCol]) {
+      athlete.email = String(row[columnIndices.emailCol]).trim().toLowerCase();
+    }
+    if (columnIndices.phoneCol !== -1 && row[columnIndices.phoneCol]) {
+      athlete.phone = String(row[columnIndices.phoneCol]).trim();
+    }
+    if (columnIndices.genderCol !== -1 && row[columnIndices.genderCol]) {
+      athlete.gender = this.normalizeGender(String(row[columnIndices.genderCol]).trim());
+    }
+    if (columnIndices.birthYearCol !== -1 && row[columnIndices.birthYearCol]) {
+      athlete.birth_year = this.parseInteger(row[columnIndices.birthYearCol]);
+    }
+    if (columnIndices.sweepScullCol !== -1 && row[columnIndices.sweepScullCol]) {
+      athlete.sweep_scull = this.normalizeSweepScull(String(row[columnIndices.sweepScullCol]).trim());
+    }
+    if (columnIndices.portStarboardCol !== -1 && row[columnIndices.portStarboardCol]) {
+      athlete.port_starboard = this.normalizePortStarboard(String(row[columnIndices.portStarboardCol]).trim());
+    }
+    if (columnIndices.coxCol !== -1 && row[columnIndices.coxCol]) {
+      athlete.cox_capability = this.normalizeCoxCapability(String(row[columnIndices.coxCol]).trim());
+    }
+    if (columnIndices.bowInDarkCol !== -1 && row[columnIndices.bowInDarkCol]) {
+      athlete.bow_in_dark = this.normalizeBowInDark(String(row[columnIndices.bowInDarkCol]).trim());
+    }
+    if (columnIndices.weightCol !== -1 && row[columnIndices.weightCol]) {
+      // Convert weight from pounds to kilograms (1 lb = 0.453592 kg)
+      const weightLbs = this.parseDecimal(row[columnIndices.weightCol]);
+      if (weightLbs) {
+        athlete.weight_kg = Math.round(weightLbs * 0.453592 * 100) / 100; // Round to 2 decimal places
+      }
+    }
+    // Note: height_cm is not in Google Sheets, so we skip it (will remain null)
+    if (columnIndices.experienceCol !== -1 && row[columnIndices.experienceCol]) {
+      athlete.experience_years = this.parseInteger(row[columnIndices.experienceCol]);
+    }
+    if (columnIndices.usRowingNumberCol !== -1 && row[columnIndices.usRowingNumberCol]) {
+      athlete.us_rowing_number = String(row[columnIndices.usRowingNumberCol]).trim();
+    }
+    if (columnIndices.emergencyContactCol !== -1 && row[columnIndices.emergencyContactCol]) {
+      athlete.emergency_contact = String(row[columnIndices.emergencyContactCol]).trim();
+    }
+    if (columnIndices.emergencyContactPhoneCol !== -1 && row[columnIndices.emergencyContactPhoneCol]) {
+      athlete.emergency_contact_phone = String(row[columnIndices.emergencyContactPhoneCol]).trim();
+    }
+
+    // Calculate age and assign USRA category
+    if (athlete.birth_year) {
+      const currentAge = 2025 - athlete.birth_year;
+      athlete.usra_age_category_id = await this.findUsraCategoryForAge(currentAge);
+    }
 
     // ETL metadata
     athlete.etl_source = 'google_sheets';
@@ -153,11 +239,6 @@ export class AthletesETL extends BaseETLProcess {
       // Weight validation
       if (athlete.weight_kg && (athlete.weight_kg < 0 || athlete.weight_kg > 1000)) {
         warnings.push(`Row ${i + 1}: Unusual weight value '${athlete.weight_kg}'`);
-      }
-
-      // Age validation
-      if (athlete.age && (athlete.age < 0 || athlete.age > 150)) {
-        warnings.push(`Row ${i + 1}: Unusual age value '${athlete.age}'`);
       }
     }
 
@@ -221,15 +302,36 @@ export class AthletesETL extends BaseETLProcess {
   }
 
   // Helper methods for data normalization
-  private normalizeType(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      'cox': 'Cox',
-      'rower': 'Rower',
-      'rower & coxswain': 'Rower & Coxswain',
-      'rower and coxswain': 'Rower & Coxswain'
-    };
-    return typeMap[type.toLowerCase()] || type;
+  private findColumnIndex(headerRow: any[], possibleNames: string[]): number {
+    for (let i = 0; i < headerRow.length; i++) {
+      const header = String(headerRow[i] || '').toLowerCase();
+      for (const name of possibleNames) {
+        if (header.includes(name.toLowerCase())) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
+
+  private parseType(value: any): 'Cox' | 'Rower' | 'Rower & Coxswain' {
+    if (!value) return 'Rower'; // Default to Rower if no type specified
+    
+    const stringValue = String(value).toLowerCase().trim();
+    
+    // Handle Cox? column mapping
+    if (stringValue === 'no') return 'Rower';
+    if (stringValue === 'only') return 'Cox';
+    if (stringValue === 'sometimes') return 'Rower & Coxswain';
+    
+    // Handle direct type values
+    if (stringValue === 'cox') return 'Cox';
+    if (stringValue === 'rower') return 'Rower';
+    if (stringValue.includes('rower') && stringValue.includes('cox')) return 'Rower & Coxswain';
+    
+    return 'Rower'; // Default fallback
+  }
+
 
   private normalizeGender(gender: string): string {
     const genderMap: { [key: string]: string } = {
@@ -296,5 +398,28 @@ export class AthletesETL extends BaseETLProcess {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  /**
+   * Find USRA category for a given age
+   */
+  private async findUsraCategoryForAge(age: number): Promise<number | null> {
+    try {
+      const category = await UsraCategory.findOne({
+        where: {
+          start_age: {
+            [Op.lte]: age
+          },
+          end_age: {
+            [Op.gte]: age
+          }
+        }
+      });
+
+      return category ? category.usra_category_id : null;
+    } catch (error) {
+      console.warn(`⚠️  Failed to find USRA category for age ${age}:`, error);
+      return null;
+    }
   }
 }

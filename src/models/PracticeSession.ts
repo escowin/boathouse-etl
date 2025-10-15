@@ -3,46 +3,34 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface PracticeSessionAttributes {
-  session_id: string;
+  session_id: number;
   team_id: number;
   date: Date;
-  start_time?: string;
+  start_time: string;
   end_time?: string;
+  session_type: 'Practice' | 'Race' | 'Erg Test' | 'Meeting' | 'Other';
   location?: string;
-  session_type: 'Practice' | 'Scrimmage' | 'Test' | 'Regatta' | 'Team Building';
-  session_name?: string;
-  focus_area?: string;
   notes?: string;
-  weather_conditions?: string;
   created_at: Date;
   updated_at: Date;
-  etl_source: string;
-  etl_last_sync: Date;
 }
 
 // Define the creation attributes
 interface PracticeSessionCreationAttributes extends Optional<PracticeSessionAttributes,
-  'start_time' | 'end_time' | 'location' | 'session_name' | 'focus_area' |
-  'notes' | 'weather_conditions' | 'created_at' | 'updated_at' |
-  'etl_source' | 'etl_last_sync'
+  'session_id' | 'end_time' | 'location' | 'notes' | 'created_at' | 'updated_at'
 > {}
 
 class PracticeSession extends Model<PracticeSessionAttributes, PracticeSessionCreationAttributes> implements PracticeSessionAttributes {
-  public session_id!: string;
+  public session_id!: number;
   public team_id!: number;
   public date!: Date;
-  public start_time?: string;
+  public start_time!: string;
   public end_time?: string;
+  public session_type!: 'Practice' | 'Race' | 'Erg Test' | 'Meeting' | 'Other';
   public location?: string;
-  public session_type!: 'Practice' | 'Scrimmage' | 'Test' | 'Regatta' | 'Team Building';
-  public session_name?: string;
-  public focus_area?: string;
   public notes?: string;
-  public weather_conditions?: string;
   public created_at!: Date;
   public updated_at!: Date;
-  public etl_source!: string;
-  public etl_last_sync!: Date;
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -52,9 +40,10 @@ class PracticeSession extends Model<PracticeSessionAttributes, PracticeSessionCr
 PracticeSession.init(
   {
     session_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+      allowNull: false,
     },
     team_id: {
       type: DataTypes.INTEGER,
@@ -71,33 +60,22 @@ PracticeSession.init(
     },
     start_time: {
       type: DataTypes.TIME,
-      allowNull: true,
+      allowNull: false,
     },
     end_time: {
       type: DataTypes.TIME,
       allowNull: true,
     },
+    session_type: {
+      type: DataTypes.ENUM('Practice', 'Race', 'Erg Test', 'Meeting', 'Other'),
+      allowNull: false,
+      defaultValue: 'Practice',
+    },
     location: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    session_type: {
-      type: DataTypes.ENUM('Practice', 'Scrimmage', 'Test', 'Regatta', 'Team Building'),
-      allowNull: false,
-    },
-    session_name: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    focus_area: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     notes: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    weather_conditions: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
@@ -106,14 +84,6 @@ PracticeSession.init(
       defaultValue: DataTypes.NOW,
     },
     updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    etl_source: {
-      type: DataTypes.TEXT,
-      defaultValue: 'google_sheets',
-    },
-    etl_last_sync: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },

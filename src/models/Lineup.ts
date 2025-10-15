@@ -3,8 +3,8 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface LineupAttributes {
-  lineup_id: string;
-  session_id: string;
+  lineup_id: number;
+  session_id: number;
   boat_id: string;
   team_id: number;
   lineup_name?: string;
@@ -21,13 +21,13 @@ interface LineupAttributes {
 
 // Define the creation attributes
 interface LineupCreationAttributes extends Optional<LineupAttributes,
-  'lineup_name' | 'total_weight_kg' | 'average_weight_kg' | 'average_age' |
+  'lineup_id' | 'lineup_name' | 'total_weight_kg' | 'average_weight_kg' | 'average_age' |
   'notes' | 'created_at' | 'updated_at' | 'etl_source' | 'etl_last_sync'
 > {}
 
 class Lineup extends Model<LineupAttributes, LineupCreationAttributes> implements LineupAttributes {
-  public lineup_id!: string;
-  public session_id!: string;
+  public lineup_id!: number;
+  public session_id!: number;
   public boat_id!: string;
   public team_id!: number;
   public lineup_name?: string;
@@ -49,12 +49,13 @@ class Lineup extends Model<LineupAttributes, LineupCreationAttributes> implement
 Lineup.init(
   {
     lineup_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+      allowNull: false,
     },
     session_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'practice_sessions',

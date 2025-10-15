@@ -7,10 +7,9 @@ interface BoatAttributes {
   name: string;
   type: 'Single' | 'Double' | 'Pair' | 'Quad' | 'Four' | 'Eight';
   status: 'Available' | 'Reserved' | 'In Use' | 'Maintenance' | 'Retired';
+  description?: string;
   min_weight_kg?: number;
   max_weight_kg?: number;
-  manufacturer?: string;
-  year_built?: number;
   rigging_type?: string;
   notes?: string;
   created_at: Date;
@@ -21,8 +20,8 @@ interface BoatAttributes {
 
 // Define the creation attributes
 interface BoatCreationAttributes extends Optional<BoatAttributes,
-  'boat_id' | 'status' | 'min_weight_kg' | 'max_weight_kg' | 'manufacturer' | 
-  'year_built' | 'rigging_type' | 'notes' | 'created_at' | 'updated_at' |
+  'boat_id' | 'status' | 'description' | 'min_weight_kg' | 'max_weight_kg' |
+  'rigging_type' | 'notes' | 'created_at' | 'updated_at' |
   'etl_source' | 'etl_last_sync'
 > {}
 
@@ -31,10 +30,9 @@ class Boat extends Model<BoatAttributes, BoatCreationAttributes> implements Boat
   public name!: string;
   public type!: 'Single' | 'Double' | 'Pair' | 'Quad' | 'Four' | 'Eight';
   public status!: 'Available' | 'Reserved' | 'In Use' | 'Maintenance' | 'Retired';
+  public description?: string;
   public min_weight_kg?: number;
   public max_weight_kg?: number;
-  public manufacturer?: string;
-  public year_built?: number;
   public rigging_type?: string;
   public notes?: string;
   public created_at!: Date;
@@ -67,6 +65,10 @@ Boat.init(
       type: DataTypes.ENUM('Available', 'Reserved', 'In Use', 'Maintenance', 'Retired'),
       defaultValue: 'Available',
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     min_weight_kg: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
@@ -81,18 +83,6 @@ Boat.init(
       validate: {
         min: 0,
         max: 1000,
-      },
-    },
-    manufacturer: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    year_built: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      validate: {
-        min: 1800,
-        max: new Date().getFullYear() + 1,
       },
     },
     rigging_type: {

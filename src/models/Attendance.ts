@@ -3,10 +3,10 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface AttendanceAttributes {
-  attendance_id: string;
-  session_id: string;
+  attendance_id: number;
+  session_id: number;
   athlete_id: string;
-  status: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused';
+  status: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused' | null;
   notes?: string;
   team_id: number;
   created_at: Date;
@@ -17,14 +17,14 @@ interface AttendanceAttributes {
 
 // Define the creation attributes
 interface AttendanceCreationAttributes extends Optional<AttendanceAttributes,
-  'notes' | 'created_at' | 'updated_at' | 'etl_source' | 'etl_last_sync'
+  'attendance_id' | 'notes' | 'created_at' | 'updated_at' | 'etl_source' | 'etl_last_sync'
 > {}
 
 class Attendance extends Model<AttendanceAttributes, AttendanceCreationAttributes> implements AttendanceAttributes {
-  public attendance_id!: string;
-  public session_id!: string;
+  public attendance_id!: number;
+  public session_id!: number;
   public athlete_id!: string;
-  public status!: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused';
+  public status!: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused' | null;
   public notes?: string;
   public team_id!: number;
   public created_at!: Date;
@@ -40,12 +40,13 @@ class Attendance extends Model<AttendanceAttributes, AttendanceCreationAttribute
 Attendance.init(
   {
     attendance_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+      allowNull: false,
     },
     session_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'practice_sessions',
@@ -64,7 +65,7 @@ Attendance.init(
     },
     status: {
       type: DataTypes.ENUM('Yes', 'No', 'Maybe', 'Late', 'Excused'),
-      allowNull: false,
+      allowNull: true,
     },
     notes: {
       type: DataTypes.TEXT,

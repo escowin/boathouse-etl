@@ -46,6 +46,12 @@ async function debugGoogleSheets() {
 
     const rows = response.data.values || [];
     console.log(`✅ Retrieved ${rows.length} raw rows`);
+    
+    // Debug: Show the full response structure
+    console.log(`🔍 Response range: ${response.data.range}`);
+    console.log(`🔍 Response majorDimension: ${response.data.majorDimension}`);
+    console.log(`🔍 First row length: ${rows[0]?.length || 0}`);
+    console.log(`🔍 First row:`, JSON.stringify(rows[0], null, 2));
     console.log('');
 
     if (rows.length === 0) {

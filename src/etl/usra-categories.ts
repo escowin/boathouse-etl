@@ -66,7 +66,14 @@ export class UsraCategoriesETL extends BaseETLProcess {
       }
     }
 
-    console.log(`✅ Transformed ${transformedData.length} USRA Categories records`);
+    // Add the missing (AA) 21 to 26 years category
+    transformedData.push({
+      start_age: 21,
+      end_age: 26,
+      category: '(AA) 21 to 26 years'
+    });
+
+    console.log(`✅ Transformed ${transformedData.length} USRA Categories records (including added AA category)`);
     return {
       data: transformedData,
       errors,

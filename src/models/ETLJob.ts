@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface ETLJobAttributes {
-  job_id: string;
+  job_id: number;
   job_type: 'full_etl' | 'incremental_etl' | 'athletes_sync' | 'boats_sync' | 'attendance_sync';
   status: 'running' | 'completed' | 'failed' | 'cancelled';
   started_at: Date;
@@ -21,13 +21,13 @@ interface ETLJobAttributes {
 
 // Define the creation attributes
 interface ETLJobCreationAttributes extends Optional<ETLJobAttributes,
-  'completed_at' | 'duration_seconds' | 'records_processed' | 'records_failed' |
+  'job_id' | 'completed_at' | 'duration_seconds' | 'records_processed' | 'records_failed' |
   'records_created' | 'records_updated' | 'error_message' | 'error_details' |
   'metadata' | 'created_at'
 > {}
 
 class ETLJob extends Model<ETLJobAttributes, ETLJobCreationAttributes> implements ETLJobAttributes {
-  public job_id!: string;
+  public job_id!: number;
   public job_type!: 'full_etl' | 'incremental_etl' | 'athletes_sync' | 'boats_sync' | 'attendance_sync';
   public status!: 'running' | 'completed' | 'failed' | 'cancelled';
   public started_at!: Date;
@@ -50,9 +50,10 @@ class ETLJob extends Model<ETLJobAttributes, ETLJobCreationAttributes> implement
 ETLJob.init(
   {
     job_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+      allowNull: false,
     },
     job_type: {
       type: DataTypes.ENUM('full_etl', 'incremental_etl', 'athletes_sync', 'boats_sync', 'attendance_sync'),

@@ -8,6 +8,7 @@ import { BoatsETL } from './boats';
 import { UsraCategoriesETL } from './usra-categories';
 import { PracticeSessionsETL } from './practice-sessions';
 import { TeamsETL } from './teams';
+import { AttendanceETL } from './attendance';
 import { DatabaseUtils } from '../utils/database';
 import { ETLJobConfig, ETLResult } from './types';
 
@@ -64,6 +65,13 @@ export class ETLOrchestrator {
 
     this.processes.set('teams', new TeamsETL({
       batchSize: this.config.batchSize || 10,
+      retryAttempts: this.config.retryAttempts || 3,
+      retryDelayMs: this.config.retryDelayMs || 1000,
+      dryRun: this.config.dryRun || false
+    }));
+
+    this.processes.set('attendance', new AttendanceETL({
+      batchSize: this.config.batchSize || 50,
       retryAttempts: this.config.retryAttempts || 3,
       retryDelayMs: this.config.retryDelayMs || 1000,
       dryRun: this.config.dryRun || false

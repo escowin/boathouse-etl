@@ -5,23 +5,18 @@ import sequelize from '../config/database';
 interface AthleteAttributes {
   athlete_id: string;
   name: string;
-  first_name?: string;
-  last_name?: string;
   email?: string;
   phone?: string;
   type: 'Cox' | 'Rower' | 'Rower & Coxswain';
   gender?: 'M' | 'F';
   birth_year?: number;
-  age?: number;
   sweep_scull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
   port_starboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
-  cox_capability?: 'No' | 'Sometimes' | 'Only';
-  bow_in_dark?: 'Yes' | 'No' | 'If I have to';
+  bow_in_dark?: boolean;
   weight_kg?: number;
   height_cm?: number;
   experience_years?: number;
-  usra_age_category_2025?: string;
-  usra_age_category_id?: string;
+  usra_age_category_id?: number;
   us_rowing_number?: string;
   emergency_contact?: string;
   emergency_contact_phone?: string;
@@ -34,10 +29,9 @@ interface AthleteAttributes {
 
 // Define the creation attributes (optional fields for creation)
 interface AthleteCreationAttributes extends Optional<AthleteAttributes, 
-  'athlete_id' | 'first_name' | 'last_name' | 'email' | 'phone' | 'gender' | 
-  'birth_year' | 'age' | 'sweep_scull' | 'port_starboard' | 'cox_capability' | 
-  'bow_in_dark' | 'weight_kg' | 'height_cm' | 'experience_years' | 
-  'usra_age_category_2025' | 'usra_age_category_id' | 'us_rowing_number' | 'emergency_contact' | 
+  'athlete_id' | 'email' | 'phone' | 'gender' | 
+  'birth_year' | 'sweep_scull' | 'port_starboard' | 
+  'bow_in_dark' | 'weight_kg' | 'height_cm' |'experience_years' | 'usra_age_category_id' | 'us_rowing_number' | 'emergency_contact' | 
   'emergency_contact_phone' | 'active' | 'created_at' | 'updated_at' | 
   'etl_source' | 'etl_last_sync'
 > {}
@@ -45,23 +39,18 @@ interface AthleteCreationAttributes extends Optional<AthleteAttributes,
 class Athlete extends Model<AthleteAttributes, AthleteCreationAttributes> implements AthleteAttributes {
   public athlete_id!: string;
   public name!: string;
-  public first_name?: string;
-  public last_name?: string;
   public email?: string;
   public phone?: string;
   public type!: 'Cox' | 'Rower' | 'Rower & Coxswain';
   public gender?: 'M' | 'F';
   public birth_year?: number;
-  public age?: number;
   public sweep_scull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
   public port_starboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
-  public cox_capability?: 'No' | 'Sometimes' | 'Only';
-  public bow_in_dark?: 'Yes' | 'No' | 'If I have to';
+  public bow_in_dark?: boolean;
   public weight_kg?: number;
   public height_cm?: number;
   public experience_years?: number;
-  public usra_age_category_2025?: string;
-  public usra_age_category_id?: string;
+  public usra_age_category_id?: number;
   public us_rowing_number?: string;
   public emergency_contact?: string;
   public emergency_contact_phone?: string;
@@ -86,14 +75,6 @@ Athlete.init(
     name: {
       type: DataTypes.TEXT,
       allowNull: false,
-    },
-    first_name: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    last_name: {
-      type: DataTypes.TEXT,
-      allowNull: true,
     },
     email: {
       type: DataTypes.TEXT,
@@ -122,14 +103,6 @@ Athlete.init(
         max: new Date().getFullYear(),
       },
     },
-    age: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      validate: {
-        min: 0,
-        max: 150,
-      },
-    },
     sweep_scull: {
       type: DataTypes.ENUM('Sweep', 'Scull', 'Sweep & Scull'),
       allowNull: true,
@@ -138,12 +111,8 @@ Athlete.init(
       type: DataTypes.ENUM('Starboard', 'Prefer Starboard', 'Either', 'Prefer Port', 'Port'),
       allowNull: true,
     },
-    cox_capability: {
-      type: DataTypes.ENUM('No', 'Sometimes', 'Only'),
-      allowNull: true,
-    },
     bow_in_dark: {
-      type: DataTypes.ENUM('Yes', 'No', 'If I have to'),
+      type: DataTypes.BOOLEAN,
       allowNull: true,
     },
     weight_kg: {
@@ -155,7 +124,7 @@ Athlete.init(
       },
     },
     height_cm: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.INTEGER,
       allowNull: true,
       validate: {
         min: 0,
@@ -170,12 +139,8 @@ Athlete.init(
         max: 100,
       },
     },
-    usra_age_category_2025: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     usra_age_category_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'usra_categories',

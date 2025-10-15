@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index';
 
 export interface UsraCategoryAttributes {
-  usra_category_id: string;
+  usra_category_id: number;
   start_age: number;
   end_age: number;
   category: string;
@@ -17,7 +17,7 @@ export interface UsraCategoryCreationAttributes {
 }
 
 class UsraCategory extends Model<UsraCategoryAttributes, UsraCategoryCreationAttributes> implements UsraCategoryAttributes {
-  public usra_category_id!: string;
+  public usra_category_id!: number;
   public start_age!: number;
   public end_age!: number;
   public category!: string;
@@ -32,8 +32,8 @@ class UsraCategory extends Model<UsraCategoryAttributes, UsraCategoryCreationAtt
 UsraCategory.init(
   {
     usra_category_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },

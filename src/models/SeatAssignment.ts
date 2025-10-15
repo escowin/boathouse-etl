@@ -3,34 +3,28 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface SeatAssignmentAttributes {
-  assignment_id: string;
-  lineup_id: string;
+  seat_assignment_id: number;
+  lineup_id: number;
   athlete_id: string;
   seat_number: number;
-  is_coxswain: boolean;
-  notes?: string;
+  side?: 'Port' | 'Starboard';
   created_at: Date;
   updated_at: Date;
-  etl_source: string;
-  etl_last_sync: Date;
 }
 
 // Define the creation attributes
 interface SeatAssignmentCreationAttributes extends Optional<SeatAssignmentAttributes,
-  'is_coxswain' | 'notes' | 'created_at' | 'updated_at' | 'etl_source' | 'etl_last_sync'
+  'seat_assignment_id' | 'side' | 'created_at' | 'updated_at'
 > {}
 
 class SeatAssignment extends Model<SeatAssignmentAttributes, SeatAssignmentCreationAttributes> implements SeatAssignmentAttributes {
-  public assignment_id!: string;
-  public lineup_id!: string;
+  public seat_assignment_id!: number;
+  public lineup_id!: number;
   public athlete_id!: string;
   public seat_number!: number;
-  public is_coxswain!: boolean;
-  public notes?: string;
+  public side?: 'Port' | 'Starboard';
   public created_at!: Date;
   public updated_at!: Date;
-  public etl_source!: string;
-  public etl_last_sync!: Date;
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -39,13 +33,14 @@ class SeatAssignment extends Model<SeatAssignmentAttributes, SeatAssignmentCreat
 
 SeatAssignment.init(
   {
-    assignment_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+    seat_assignment_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+      allowNull: false,
     },
     lineup_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'lineups',
@@ -65,17 +60,9 @@ SeatAssignment.init(
     seat_number: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      validate: {
-        min: 1,
-        max: 9,
-      },
     },
-    is_coxswain: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    notes: {
-      type: DataTypes.TEXT,
+    side: {
+      type: DataTypes.ENUM('Port', 'Starboard'),
       allowNull: true,
     },
     created_at: {
@@ -83,14 +70,6 @@ SeatAssignment.init(
       defaultValue: DataTypes.NOW,
     },
     updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    etl_source: {
-      type: DataTypes.TEXT,
-      defaultValue: 'google_sheets',
-    },
-    etl_last_sync: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },

@@ -64,6 +64,11 @@ async function main() {
         await orchestrator.runProcess('teams');
         break;
 
+      case 'attendance':
+        console.log('🔄 Running Attendance ETL Process');
+        await orchestrator.runProcess('attendance');
+        break;
+
       case 'test':
         console.log('🧪 Running ETL Test (Dry Run)');
         await orchestrator.testETL();
@@ -155,6 +160,7 @@ Commands:
   usra-categories Run USRA Categories ETL process only
   practice-sessions Run Practice Sessions ETL process only
   teams         Run Teams ETL process only
+  attendance    Run Attendance ETL process only
   test          Run ETL test (dry run)
   validate      Validate ETL configuration
   status        Get ETL status and statistics
