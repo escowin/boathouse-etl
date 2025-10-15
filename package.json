@@ -36,7 +36,9 @@
     "test:models": "ts-node src/scripts/test-models.ts",
     "migrate:up": "ts-node src/scripts/run-migrations.ts",
     "test:sheets-data": "ts-node src/scripts/test-google-sheets-data.ts",
-    "debug:sheets": "ts-node src/scripts/debug-google-sheets.ts"
+    "debug:sheets": "ts-node src/scripts/debug-google-sheets.ts",
+    "clear:attendance": "ts-node src/scripts/clear-attendance.ts",
+    "reset:attendance-sequence": "ts-node src/scripts/reset-attendance-sequence.ts"
   },
   "keywords": [],
   "author": "Edwin Escobar",

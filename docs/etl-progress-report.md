@@ -54,22 +54,44 @@
    - **Solution**: Updated `extractPracticeSessions` to query database for actual practice sessions and retrieve `session_id`
    - **Implementation**: Made method async and added database lookup for each session
 
-#### ❌ Current Issue: Missing Practice Sessions
-**Problem**: Attendance ETL failing because practice sessions don't exist in database
-- **Error**: `WHERE parameter "session_id" has invalid "undefined" value`
-- **Root Cause**: Practice Sessions ETL hasn't been run, so no practice sessions exist in database
-- **Evidence**: SQL queries show attempts to find sessions like `'2025-08-16'`, `'2025-08-18'`, etc., but these don't exist
-- **Impact**: 23,562 attendance records failed to load
+#### ✅ Practice Sessions ETL Completed
+**Status**: Practice Sessions ETL successfully completed
+- **Sessions Loaded**: 186/186 practice sessions (187th intentionally skipped due to #VALUE! error in GI4)
+- **Date Range**: Practice sessions from current year loaded successfully
+- **Special Handling**: Cell GI4 with #VALUE! error was safely skipped (duplicate date already exists in GH4)
+- **Result**: Practice sessions table now populated and ready for Attendance ETL
+
+#### ✅ Attendance ETL Completed Successfully
+**Status**: Attendance ETL successfully completed with optimizations and whitespace fix
+- **Records Created**: 11,904 attendance records (clean sequence starting from ID 1)
+- **Records Updated**: 186 records
+- **Records Failed**: 13 records (expected - session_id 187 doesn't exist due to column GI skip)
+- **Table Bloat Prevention**: Working correctly - athletes with only null responses filtered out and deactivated
+- **Sequential Mapping**: Perfect 1:1 alignment with practice sessions (session_id 1-186)
+- **Performance**: ~4.3 minutes processing time with optimized data structure
+- **Athlete Processing**: 60 athletes successfully processed, 63 athletes skipped (not in database)
+
+#### 🔧 Issues Resolved
+1. **Athlete Name Matching** - ✅ RESOLVED
+   - **Problem**: Athletes with trailing whitespace in names (e.g., "Nik Vantfoort ") not matching database records
+   - **Solution**: Added `.trim()` to remove leading/trailing whitespace from athlete names
+   - **Result**: All athletes with valid names now properly matched (e.g., Nik Vantfoort: 156 attendance records)
+
+2. **Detailed Reporting** - ✅ IMPLEMENTED
+   - **Added**: Comprehensive skipped athletes reporting with reasons and details
+   - **Added**: Processed athletes summary showing record counts
+   - **Added**: Simplified failed records reporting focusing on error types
+   - **Result**: Clear visibility into ETL processing and data quality issues
 
 #### 🔧 Next Steps Required
-1. **Run Practice Sessions ETL** - Need to populate practice_sessions table first
-2. **Re-run Attendance ETL** - Should work once practice sessions exist
-3. **Verify Data Integrity** - Check that attendance records properly link to sessions and athletes
+1. **Run Lineup ETL** - Final ETL process to complete the data pipeline
+2. **Verify Data Integrity** - Check that attendance records properly link to sessions and athletes
+3. **Data Analysis** - Review attendance patterns and athlete participation
 
 ### 📊 ETL Process Dependencies
 ```
-USRA Categories → Teams → Athletes → Practice Sessions → Attendance
-     ✅            ✅        ✅           ❌              ❌
+USRA Categories → Teams → Athletes → Practice Sessions → Attendance → Lineup
+     ✅            ✅        ✅           ✅              ✅         ❌
 ```
 
 ### 🎯 Success Metrics
@@ -77,8 +99,9 @@ USRA Categories → Teams → Athletes → Practice Sessions → Attendance
 - **Teams**: 1/1 team created ✅  
 - **Athletes**: 131/131 athletes loaded ✅
 - **Boats**: Multiple boats loaded ✅
-- **Practice Sessions**: 0 sessions (ETL not run) ❌
-- **Attendance**: 0 records (blocked by missing sessions) ❌
+- **Practice Sessions**: 186/186 sessions loaded (187th skipped due to #VALUE! error) ✅
+- **Attendance**: 11,904 records loaded (60 athletes processed, 63 skipped, whitespace fix applied) ✅
+- **Lineup**: 0 records (ETL not run) ❌
 
 ### 🔍 Technical Implementation Notes
 - **Sequelize Data Access**: Fixed property access issues using `getDataValue()` method
@@ -92,12 +115,25 @@ USRA Categories → Teams → Athletes → Practice Sessions → Attendance
    - Added HOC time handling
    - Made `extractPracticeSessions` async with database lookup
    - Updated session resolution logic
+   - **Added whitespace trimming** for athlete names to fix matching issues
+   - **Added comprehensive reporting** for skipped athletes and processing results
+   - **Optimized filtering logic** to prevent table bloat
 
-2. **Data Quality Fixes**:
+2. **src/config/database.ts**:
+   - Temporarily disabled SQL logging for cleaner ETL output during debugging
+
+3. **Data Quality Fixes**:
    - `bow_in_dark` boolean conversion
    - `experience_years` validation (drop last digit for values > 100)
    - HOC time defaulting to 6:15 AM
    - USRA category reorganization
+   - **Athlete name whitespace trimming** for robust matching
 
 ### 🚀 Ready for Production
-Once Practice Sessions ETL is run, the Attendance ETL should work correctly and complete the full ETL pipeline. All major technical issues have been resolved.
+The Attendance ETL is now fully functional and has been successfully completed. All major technical issues have been resolved, including:
+- Athlete name matching with whitespace handling
+- Comprehensive error reporting and data quality monitoring
+- Optimized filtering to prevent table bloat
+- Sequential session mapping for performance
+
+**Next Step**: Run the Lineup ETL to complete the full data pipeline.

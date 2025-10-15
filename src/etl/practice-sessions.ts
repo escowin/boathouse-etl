@@ -118,8 +118,14 @@ export class PracticeSessionsETL extends BaseETLProcess {
     let sessionDate: Date;
     let sessionTime: string;
 
+    // Skip cells with #VALUE! errors - these are broken formulas that can be safely ignored
+    if (datetimeCell === '#VALUE!') {
+      console.log(`⏭️  Skipping column ${colIndex} due to #VALUE! error in datetime cell`);
+      return null;
+    }
+
     // Primary approach: Use datetime cell if available and valid
-    if (datetimeCell) {
+    if (datetimeCell && datetimeCell !== 'HOC') {
       try {
         const parsedDate = new Date(datetimeCell);
         if (!isNaN(parsedDate.getTime())) {
@@ -143,6 +149,7 @@ export class PracticeSessionsETL extends BaseETLProcess {
       }
     } else {
       // Fallback approach: Parse date and time separately
+      // This handles cases where datetimeCell is 'HOC' or missing
       const parsed = this.parseDateAndTime(dateCell, timeCell);
       if (!parsed) return null;
       sessionDate = parsed.date;
