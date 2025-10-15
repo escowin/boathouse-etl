@@ -557,20 +557,13 @@ CREATE TABLE gauntlet_matches (
 
 CREATE TABLE gauntlet_lineups (
     gauntlet_lineup_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    match_id UUID REFERENCES gauntlet_matches(match_id) ON DELETE CASCADE,
+    gauntlet_id UUID REFERENCES gauntlets(gauntlet_id) ON DELETE CASCADE,
     boat_id UUID REFERENCES boats(boat_id),
     team_id INTEGER REFERENCES teams(team_id), -- Optional team context
-    lineup_name TEXT, -- e.g., "User Side", "Challenger Side"
-    side TEXT NOT NULL CHECK (side IN ('user', 'challenger')),
-    total_weight_kg DECIMAL(6, 2),
-    average_weight_kg DECIMAL(5, 2),
-    average_age DECIMAL(4, 1),
-    notes TEXT,
+    name TEXT NOT NULL,
+    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Ensure only one lineup per side per match
-    UNIQUE(match_id, side)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE gauntlet_seat_assignments (
@@ -660,9 +653,9 @@ CREATE INDEX idx_gauntlets_boat_type ON gauntlets(boat_type);
 CREATE INDEX idx_gauntlet_matches_gauntlet_id ON gauntlet_matches(gauntlet_id);
 CREATE INDEX idx_gauntlet_matches_match_date ON gauntlet_matches(match_date);
 
-CREATE INDEX idx_gauntlet_lineups_match_id ON gauntlet_lineups(match_id);
+CREATE INDEX idx_gauntlet_lineups_gauntlet_id ON gauntlet_lineups(gauntlet_id);
 CREATE INDEX idx_gauntlet_lineups_boat_id ON gauntlet_lineups(boat_id);
-CREATE INDEX idx_gauntlet_lineups_side ON gauntlet_lineups(side);
+CREATE INDEX idx_gauntlet_lineups_team_id ON gauntlet_lineups(team_id);
 
 CREATE INDEX idx_gauntlet_seat_assignments_lineup_id ON gauntlet_seat_assignments(gauntlet_lineup_id);
 CREATE INDEX idx_gauntlet_seat_assignments_athlete_id ON gauntlet_seat_assignments(athlete_id);

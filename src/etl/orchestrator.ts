@@ -108,8 +108,8 @@ export class ETLOrchestrator {
         throw new Error('Failed to initialize database connection');
       }
 
-      // Run ETL processes in sequence
-      const processOrder = ['usra-categories', 'teams', 'athletes', 'boats', 'practice-sessions', 'attendance']; // Define execution order
+      // Run ETL processes in sequence - following dependency order
+      const processOrder = ['boats', 'usra-categories', 'athletes', 'teams', 'practice-sessions', 'attendance', 'lineup'];
       
       for (const processName of processOrder) {
         const process = this.processes.get(processName);
