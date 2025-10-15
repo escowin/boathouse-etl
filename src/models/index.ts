@@ -11,6 +11,7 @@ import Lineup from './Lineup';
 import SeatAssignment from './SeatAssignment';
 import ETLJob from './ETLJob';
 import UsraCategory from './UsraCategory';
+import MailingList from './MailingLists';
 
 // Define associations
 export function setupAssociations() {
@@ -160,6 +161,17 @@ export function setupAssociations() {
     foreignKey: 'usra_age_category_id',
     as: 'athletes'
   });
+
+  // Team -> MailingList (Many-to-One)
+  Team.belongsTo(MailingList, {
+    foreignKey: 'mailing_list_id',
+    as: 'mailing_list'
+  });
+
+  MailingList.hasMany(Team, {
+    foreignKey: 'mailing_list_id',
+    as: 'teams'
+  });
 }
 
 // Initialize associations
@@ -177,7 +189,8 @@ export {
   Lineup,
   SeatAssignment,
   ETLJob,
-  UsraCategory
+  UsraCategory,
+  MailingList
 };
 
 export default sequelize;

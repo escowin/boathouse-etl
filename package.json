@@ -36,6 +36,8 @@
     "debug:connection": "ts-node src/scripts/debug-connection.ts",
     "test:models": "ts-node src/scripts/test-models.ts",
     "migrate:up": "ts-node src/scripts/run-migrations.ts",
+    "migrate:mailing-lists": "ts-node src/scripts/run-mailing-lists-migration.ts",
+    "seed:mailing-lists": "ts-node src/scripts/seed-mailing-lists.ts",
     "test:sheets-data": "ts-node src/scripts/test-google-sheets-data.ts",
     "debug:sheets": "ts-node src/scripts/debug-google-sheets.ts",
     "clear:attendance": "ts-node src/scripts/clear-attendance.ts",
