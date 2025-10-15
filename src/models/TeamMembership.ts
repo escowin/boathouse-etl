@@ -60,9 +60,9 @@ TeamMembership.init(
       onDelete: 'CASCADE',
     },
     role: {
-      type: DataTypes.ENUM('Member', 'Captain', 'Coach', 'Admin'),
+      type: DataTypes.ENUM('Athlete', 'Captain', 'Coach', 'Assistant Coach', 'Secretary'),
       allowNull: false,
-      defaultValue: 'Member',
+      defaultValue: 'Athlete',
     },
     joined_at: {
       type: DataTypes.DATE,

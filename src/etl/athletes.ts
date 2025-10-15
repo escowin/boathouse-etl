@@ -181,7 +181,7 @@ export class AthletesETL extends BaseETLProcess {
     }
     // Note: height_cm is not in Google Sheets, so we skip it (will remain null)
     if (columnIndices.experienceCol !== -1 && row[columnIndices.experienceCol]) {
-      athlete.experience_years = this.parseInteger(row[columnIndices.experienceCol]);
+      athlete.experience_years = this.parseExperienceYears(row[columnIndices.experienceCol]);
     }
     if (columnIndices.usRowingNumberCol !== -1 && row[columnIndices.usRowingNumberCol]) {
       athlete.us_rowing_number = String(row[columnIndices.usRowingNumberCol]).trim();
@@ -373,20 +373,33 @@ export class AthletesETL extends BaseETLProcess {
     return coxCapabilityMap[coxCapability.toLowerCase()] || coxCapability;
   }
 
-  private normalizeBowInDark(bowInDark: string): string {
-    const bowInDarkMap: { [key: string]: string } = {
-      'yes': 'Yes',
-      'no': 'No',
-      'if i have to': 'If I have to',
-      'if i have too': 'If I have to'
+  private normalizeBowInDark(bowInDark: string): boolean {
+    const bowInDarkMap: { [key: string]: boolean } = {
+      'yes': true,
+      'no': false,
+      'if i have to': true,
+      'if i have too': true
     };
-    return bowInDarkMap[bowInDark.toLowerCase()] || bowInDark;
+    return bowInDarkMap[bowInDark.toLowerCase()] ?? false;
   }
 
   private parseInteger(value: any): number | null {
     if (value === null || value === undefined || value === '') return null;
     const parsed = parseInt(String(value), 10);
     return isNaN(parsed) ? null : parsed;
+  }
+
+  private parseExperienceYears(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = parseInt(String(value), 10);
+    if (isNaN(parsed)) return null;
+    
+    // If experience years > 100, drop the last digit (e.g., 379 -> 37)
+    if (parsed > 100) {
+      return Math.floor(parsed / 10);
+    }
+    
+    return parsed;
   }
 
   private parseDecimal(value: any): number | null {

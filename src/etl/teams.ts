@@ -35,12 +35,34 @@ export class TeamsETL extends BaseETLProcess {
     // In the future, this could be extracted from a Teams sheet
     const teamsData = [
       {
-        name: 'mens-masters',
-        display_name: 'Mens Masters',
+        name: 'Mens Masters',
         team_type: 'Masters',
-        gender_focus: 'M',
-        skill_level: 'Advanced',
-        active: true
+        description: 'Advanced Mens Masters',
+      },
+      {
+        name: "Babs",
+        team_type: "Masters",
+        description: "Advanced Womens Masters",
+      },
+      {
+        name: "New Crew",
+        team_type: "Masters",
+        description: "Beginner Crew",
+      },
+      {
+        name: "Intermediate Crew",
+        team_type: "Masters",
+        description: "Intermediate Crew",
+      },
+      {
+        name: "Boys Varsity",
+        team_type: "Youth",
+        description: "Boys Varsity Crew",
+      },
+      {
+        name: "Girls Varsity",
+        team_type: "Youth",
+        description: "Girls Varsity Crew",
       }
     ];
 
@@ -62,11 +84,10 @@ export class TeamsETL extends BaseETLProcess {
       try {
         const transformedTeam = {
           name: team.name,
-          display_name: team.display_name,
           team_type: team.team_type,
-          gender_focus: team.gender_focus,
-          skill_level: team.skill_level,
-          active: team.active
+          description: team.description,
+          head_coach_id: team.head_coach_id,
+          assistant_coaches: team.assistant_coaches
         };
 
         transformedData.push(transformedTeam);
@@ -100,12 +121,21 @@ export class TeamsETL extends BaseETLProcess {
         errors.push(`Team ${i + 1}: Invalid name`);
       }
 
-      if (!team.display_name || typeof team.display_name !== 'string') {
-        errors.push(`Team ${i + 1}: Invalid display_name`);
+      // Optional fields validation
+      if (team.team_type && typeof team.team_type !== 'string') {
+        errors.push(`Team ${i + 1}: Invalid team_type`);
       }
 
-      if (!team.team_type || typeof team.team_type !== 'string') {
-        errors.push(`Team ${i + 1}: Invalid team_type`);
+      if (team.description && typeof team.description !== 'string') {
+        errors.push(`Team ${i + 1}: Invalid description`);
+      }
+
+      if (team.head_coach_id && typeof team.head_coach_id !== 'string') {
+        errors.push(`Team ${i + 1}: Invalid head_coach_id`);
+      }
+
+      if (team.assistant_coaches && !Array.isArray(team.assistant_coaches)) {
+        errors.push(`Team ${i + 1}: Invalid assistant_coaches - must be array`);
       }
 
       // Validate name format (should be lowercase with hyphens)
@@ -152,19 +182,17 @@ export class TeamsETL extends BaseETLProcess {
           if (!created) {
             // Update existing team if needed
             const needsUpdate = 
-              team.display_name !== teamData.display_name ||
               team.team_type !== teamData.team_type ||
-              team.gender_focus !== teamData.gender_focus ||
-              team.skill_level !== teamData.skill_level ||
-              team.active !== teamData.active;
+              team.description !== teamData.description ||
+              team.head_coach_id !== teamData.head_coach_id ||
+              JSON.stringify(team.assistant_coaches) !== JSON.stringify(teamData.assistant_coaches);
 
             if (needsUpdate) {
               await team.update({
-                display_name: teamData.display_name,
                 team_type: teamData.team_type,
-                gender_focus: teamData.gender_focus,
-                skill_level: teamData.skill_level,
-                active: teamData.active
+                description: teamData.description,
+                head_coach_id: teamData.head_coach_id,
+                assistant_coaches: teamData.assistant_coaches
               });
               recordsUpdated++;
             }

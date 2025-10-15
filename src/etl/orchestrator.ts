@@ -101,7 +101,7 @@ export class ETLOrchestrator {
       }
 
       // Run ETL processes in sequence
-      const processOrder = ['athletes', 'boats']; // Define execution order
+      const processOrder = ['usra-categories', 'teams', 'athletes', 'boats', 'practice-sessions', 'attendance']; // Define execution order
       
       for (const processName of processOrder) {
         const process = this.processes.get(processName);

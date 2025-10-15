@@ -15,7 +15,7 @@ import { QueryTypes } from 'sequelize';
 export abstract class BaseETLProcess {
   protected config: ETLProcessConfig;
   protected metrics: ETLMetrics;
-  protected jobId?: string;
+  protected jobId?: number;
 
   constructor(config: ETLProcessConfig) {
     this.config = config;
@@ -137,7 +137,7 @@ export abstract class BaseETLProcess {
   /**
    * Create ETL job record
    */
-  private async createETLJob(): Promise<string> {
+  private async createETLJob(): Promise<number> {
     const job = await ETLJob.create({
       job_type: this.getJobType(),
       status: 'running',

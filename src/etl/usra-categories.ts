@@ -73,7 +73,17 @@ export class UsraCategoriesETL extends BaseETLProcess {
       category: '(AA) 21 to 26 years'
     });
 
-    console.log(`✅ Transformed ${transformedData.length} USRA Categories records (including added AA category)`);
+    // Add USRowing Youth Categories
+    const youthCategories = [
+      { start_age: 0, end_age: 14, category: 'U15 (14 and younger)' },
+      { start_age: 15, end_age: 16, category: 'U17 (16 and younger)' },
+      { start_age: 17, end_age: 18, category: 'U19 (18 and younger)' },
+      { start_age: 19, end_age: 20, category: 'U23 (20 and younger)' }
+    ];
+
+    transformedData.push(...youthCategories);
+
+    console.log(`✅ Transformed ${transformedData.length} USRA Categories records (including AA category and youth categories)`);
     return {
       data: transformedData,
       errors,
@@ -128,10 +138,10 @@ export class UsraCategoriesETL extends BaseETLProcess {
 
     // Validate each category
     for (const category of data) {
-      if (!category.start_age || category.start_age < 0) {
+      if (category.start_age === undefined || category.start_age === null || category.start_age < 0) {
         errors.push(`Invalid start_age: ${category.start_age}`);
       }
-      if (!category.end_age || category.end_age < category.start_age) {
+      if (category.end_age === undefined || category.end_age === null || category.end_age < category.start_age) {
         errors.push(`Invalid end_age: ${category.end_age} for start_age: ${category.start_age}`);
       }
       if (!category.category || category.category.trim() === '') {

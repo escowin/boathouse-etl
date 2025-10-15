@@ -149,9 +149,9 @@ export class PracticeSessionsETL extends BaseETLProcess {
       sessionTime = parsed.time;
     }
 
-    // Skip if time is missing (like Rowcalibur does)
-    if (!sessionTime || sessionTime.trim() === '') {
-      return null;
+    // Handle missing or invalid time values
+    if (!sessionTime || sessionTime.trim() === '' || sessionTime === 'HOC') {
+      sessionTime = '6:15 AM'; // Default time for missing values or HOC
     }
 
     // Note: We could determine if this is an upcoming session here
@@ -165,9 +165,7 @@ export class PracticeSessionsETL extends BaseETLProcess {
       start_time: sessionTime,
       end_time: endTime,
       session_type: 'Practice' as const,
-      team_id: 1, // Mens Masters team (will be created by Teams ETL)
-      etl_source: 'google_sheets',
-      etl_last_sync: new Date()
+      team_id: 1 // Mens Masters team (will be created by Teams ETL)
     };
   }
 
@@ -227,7 +225,12 @@ export class PracticeSessionsETL extends BaseETLProcess {
     const sessionDate = new Date(date);
 
     // Use the time from the time cell (e.g., "6:15 AM")
-    const time = String(timeCell || '').trim();
+    let time = String(timeCell || '').trim();
+    
+    // Handle missing or invalid time values (HOC, empty, etc.)
+    if (!time || time === 'HOC') {
+      time = '6:15 AM'; // Default time for missing values or HOC
+    }
 
     return {
       date: sessionDate,
@@ -324,8 +327,7 @@ export class PracticeSessionsETL extends BaseETLProcess {
               await session.update({
                 start_time: sessionData.start_time,
                 end_time: sessionData.end_time,
-                session_type: sessionData.session_type,
-                etl_last_sync: new Date()
+                session_type: sessionData.session_type
               });
               recordsUpdated++;
             }

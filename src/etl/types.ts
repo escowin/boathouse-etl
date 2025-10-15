@@ -18,7 +18,7 @@ export interface ETLResult {
   recordsFailed: number;
   errors: string[];
   duration: number;
-  jobId?: string | undefined;
+  jobId?: number | undefined;
 }
 
 export interface GoogleSheetsRow {
