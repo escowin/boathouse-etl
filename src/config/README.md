@@ -39,7 +39,7 @@ await DatabaseUtils.initialize();
 
 // Execute transaction
 await DatabaseUtils.executeTransaction(async (transaction) => {
-  // Your database operations here
+  // Database operations here
 });
 
 // Bulk operations

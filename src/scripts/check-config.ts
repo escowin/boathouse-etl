@@ -67,14 +67,14 @@ function checkConfiguration() {
   console.log('3. Create a user (optional):');
   console.log(`   CREATE USER ${env.DB_USER} WITH PASSWORD 'your_password';`);
   console.log(`   GRANT ALL PRIVILEGES ON DATABASE ${env.DB_NAME} TO ${env.DB_USER};`);
-  console.log('4. Update your .env file with the correct database credentials');
+  console.log('4. Update .env file with the correct database credentials');
   console.log('5. Run: npm run test:db-connection\n');
   
   console.log('📝 Next Steps:');
-  console.log('1. Set up your database');
-  console.log('2. Create your .env file');
+  console.log('1. Set up database');
+  console.log('2. Create .env file');
   console.log('3. Test the connection: npm run test:db-connection');
-  console.log('4. Create your first migration: npx sequelize-cli migration:generate --name create-athletes-table');
+  console.log('4. Create first migration: npx sequelize-cli migration:generate --name create-athletes-table');
 }
 
 // Run the check

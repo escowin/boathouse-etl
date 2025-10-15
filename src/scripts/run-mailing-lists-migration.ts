@@ -93,7 +93,7 @@ async function runMailingListsMigration() {
     console.log('🎯 Next steps:');
     console.log('  • Run: npm run seed:mailing-lists (after updating email addresses)');
     console.log('  • Update existing teams to reference appropriate mailing lists');
-    console.log('  • Test the new associations in your application');
+    console.log('  • Test the new associations in application');
 
   } catch (error) {
     console.error('❌ Migration failed:');

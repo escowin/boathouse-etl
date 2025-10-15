@@ -109,7 +109,7 @@ boathouse-etl/
 3. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your database and Google Sheets credentials
+   # Edit .env with database and Google Sheets credentials
    ```
 
 4. **Setup database**
@@ -159,7 +159,7 @@ boathouse-etl/
 ### Google Sheets Setup
 1. Create a Google Service Account
 2. Download the JSON credentials file
-3. Share your Google Sheets with the service account email
+3. Share Google Sheets with the service account email
 4. Configure the sheet ID in environment variables
 
 ## 📊 Data Sources
@@ -217,7 +217,7 @@ The ETL system integrates with various Google Sheets containing:
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
+3. Make changes
 4. Add tests if applicable
 5. Submit a pull request
 

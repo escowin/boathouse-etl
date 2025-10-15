@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides a step-by-step approach to developing a separate ETL (Extract, Transform, Load) project for migrating data from your boathouse's Google Sheet to PostgreSQL. The ETL project will serve both Rowcalibur and Crewssignment applications, providing a unified data foundation for Phase 4 PostgreSQL integration.
+This guide provides a step-by-step approach to developing a separate ETL (Extract, Transform, Load) project for migrating data from my boathouse's Google Sheet to PostgreSQL. The ETL project will serve both Rowcalibur and Crewssignment applications, providing a unified data foundation for Phase 4 PostgreSQL integration.
 
 ## Prerequisites
 
@@ -281,8 +281,8 @@ rowcalibur-etl/
 ## Next Steps
 
 1. **Implement the ETL project** following this guide
-2. **Test with your boathouse data** to ensure compatibility
-3. **Deploy to your infrastructure** with proper monitoring
+2. **Test with my boathouse data** to ensure compatibility
+3. **Deploy to infrastructure** with proper monitoring
 4. **Update Rowcalibur** to use ETL-sourced data
 5. **Plan Phase 5 features** with the new database foundation
 

@@ -33,7 +33,7 @@ This schema extends the single-team design to support multiple teams within a bo
 ## Core Multi-Team Tables
 
 ### 1. Athletes Table
-Based on your current Google Sheets athlete data structure:
+Based on current Google Sheets athlete data structure:
 
 ```sql
 CREATE TABLE athletes (
@@ -85,7 +85,7 @@ CREATE INDEX idx_athletes_weight ON athletes(weight_kg);
 ```
 
 ### 2. Boats Table
-Enhanced from your current boat structure:
+Enhanced from current boat structure:
 
 ```sql
 CREATE TABLE boats (
