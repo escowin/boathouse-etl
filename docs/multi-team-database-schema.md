@@ -515,6 +515,25 @@ CREATE INDEX idx_mailing_lists_active ON mailing_lists(active);
 ### 15. Gauntlet System Tables
 For Rowcalibur's competitive system (using UUIDs for offline-first compatibility):
 
+**Simplified Design Philosophy:**
+- **Single Point of Control**: Gauntlet is the primary entity - creation and deletion of a gauntlet manages all related data
+- **Minimal Configuration**: Removed complex configuration objects in favor of simple relational structure
+- **CASCADE Deletes**: When a gauntlet is deleted, all related data is automatically removed
+- **1:1 Relationship**: Each gauntlet has exactly one ladder (auto-created)
+- **No Redundancy**: Eliminated duplicate fields between gauntlets and ladders
+
+**CASCADE Delete Chain:**
+```
+DELETE gauntlet → CASCADE deletes:
+├── gauntlet_lineups
+│   └── gauntlet_seat_assignments
+├── gauntlet_matches
+│   └── ladder_progressions (via match_id)
+└── ladders
+    ├── ladder_positions
+    └── ladder_progressions (via ladder_id)
+```
+
 ```sql
 CREATE TABLE gauntlets (
     gauntlet_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -560,10 +579,8 @@ CREATE TABLE gauntlet_matches (
 CREATE TABLE gauntlet_lineups (
     gauntlet_lineup_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     gauntlet_id UUID REFERENCES gauntlets(gauntlet_id) ON DELETE CASCADE,
+    match_id UUID REFERENCES gauntlet_matches(match_id) ON DELETE SET NULL, -- Optional - null during configuration
     boat_id UUID REFERENCES boats(boat_id),
-    team_id INTEGER REFERENCES teams(team_id), -- Optional team context
-    name TEXT NOT NULL,
-    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -571,7 +588,7 @@ CREATE TABLE gauntlet_lineups (
 CREATE TABLE gauntlet_seat_assignments (
     gauntlet_seat_assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     gauntlet_lineup_id UUID REFERENCES gauntlet_lineups(gauntlet_lineup_id) ON DELETE CASCADE,
-    athlete_id UUID REFERENCES athletes(athlete_id),
+    athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     seat_number INTEGER NOT NULL CHECK (seat_number >= 1 AND seat_number <= 8),
     side TEXT NOT NULL CHECK (side IN ('port', 'starboard')),
     notes TEXT,
@@ -584,14 +601,7 @@ CREATE TABLE gauntlet_seat_assignments (
 
 CREATE TABLE ladders (
     ladder_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
-    -- Basic Information
-    name TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('1x', '2x', '2-', '4+', '8+')),
-    created_by UUID REFERENCES athletes(athlete_id),
-    
-    -- Settings (JSONB for flexible configuration)
-    settings JSONB NOT NULL DEFAULT '{}',
+    gauntlet_id UUID REFERENCES gauntlets(gauntlet_id) ON DELETE CASCADE,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -640,7 +650,7 @@ CREATE TABLE ladder_progressions (
     reason TEXT NOT NULL CHECK (reason IN ('match_win', 'match_loss', 'match_draw', 'manual_adjustment', 'new_athlete')),
     
     -- Reference Information
-    match_id UUID REFERENCES gauntlet_matches(match_id),
+    match_id UUID REFERENCES gauntlet_matches(match_id) ON DELETE CASCADE,
     notes TEXT,
     
     -- Metadata
@@ -656,15 +666,14 @@ CREATE INDEX idx_gauntlet_matches_gauntlet_id ON gauntlet_matches(gauntlet_id);
 CREATE INDEX idx_gauntlet_matches_match_date ON gauntlet_matches(match_date);
 
 CREATE INDEX idx_gauntlet_lineups_gauntlet_id ON gauntlet_lineups(gauntlet_id);
+CREATE INDEX idx_gauntlet_lineups_match_id ON gauntlet_lineups(match_id);
 CREATE INDEX idx_gauntlet_lineups_boat_id ON gauntlet_lineups(boat_id);
-CREATE INDEX idx_gauntlet_lineups_team_id ON gauntlet_lineups(team_id);
 
 CREATE INDEX idx_gauntlet_seat_assignments_lineup_id ON gauntlet_seat_assignments(gauntlet_lineup_id);
 CREATE INDEX idx_gauntlet_seat_assignments_athlete_id ON gauntlet_seat_assignments(athlete_id);
 CREATE INDEX idx_gauntlet_seat_assignments_seat_number ON gauntlet_seat_assignments(seat_number);
 
-CREATE INDEX idx_ladders_type ON ladders(type);
-CREATE INDEX idx_ladders_created_by ON ladders(created_by);
+CREATE INDEX idx_ladders_gauntlet_id ON ladders(gauntlet_id);
 
 CREATE INDEX idx_ladder_positions_ladder_id ON ladder_positions(ladder_id);
 CREATE INDEX idx_ladder_positions_athlete_id ON ladder_positions(athlete_id);

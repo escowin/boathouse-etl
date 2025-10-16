@@ -213,7 +213,7 @@ erDiagram
         timestamp updated_at
     }
 
-    %% Rowcalibur Competitive System
+    %% Rowcalibur Competitive System (Simplified)
     GAUNTLETS {
         uuid gauntlet_id PK
         text name
@@ -240,15 +240,9 @@ erDiagram
 
     GAUNTLET_LINEUPS {
         uuid gauntlet_lineup_id PK
+        uuid gauntlet_id FK
         uuid match_id FK
         uuid boat_id FK
-        integer team_id FK
-        text lineup_name
-        text side
-        decimal total_weight_kg
-        decimal average_weight_kg
-        decimal average_age
-        text notes
         timestamp created_at
         timestamp updated_at
     }
@@ -266,10 +260,7 @@ erDiagram
 
     LADDERS {
         uuid ladder_id PK
-        text name
-        enum type
-        uuid created_by FK
-        jsonb settings
+        uuid gauntlet_id FK
         timestamp created_at
         timestamp updated_at
     }
@@ -328,15 +319,15 @@ erDiagram
     REGATTAS ||--o{ RACES : "hosts"
     LINEUPS ||--o{ RACES : "participates in"
 
-    %% Rowcalibur System Relationships
+    %% Rowcalibur System Relationships (Simplified)
     ATHLETES ||--o{ GAUNTLETS : "creates"
     GAUNTLETS ||--o{ GAUNTLET_MATCHES : "contains"
+    GAUNTLETS ||--o{ GAUNTLET_LINEUPS : "has lineups"
     GAUNTLET_MATCHES ||--o{ GAUNTLET_LINEUPS : "has two sides"
     BOATS ||--o{ GAUNTLET_LINEUPS : "used in"
-    TEAMS ||--o{ GAUNTLET_LINEUPS : "optional context"
     GAUNTLET_LINEUPS ||--o{ GAUNTLET_SEAT_ASSIGNMENTS : "contains"
     ATHLETES ||--o{ GAUNTLET_SEAT_ASSIGNMENTS : "assigned to"
-    ATHLETES ||--o{ LADDERS : "creates"
+    GAUNTLETS ||--|| LADDERS : "has one ladder"
     LADDERS ||--o{ LADDER_POSITIONS : "ranks"
     ATHLETES ||--o{ LADDER_POSITIONS : "participates in"
     LADDERS ||--o{ LADDER_PROGRESSIONS : "tracks changes"
@@ -430,18 +421,39 @@ races (INTEGER) ←→ lineups (INTEGER)
 - **Many-to-One**: RegattaRegistrations → Teams
 - **Many-to-One**: Races → Lineups
 
-## Rowcalibur Competitive System Integration
+## Rowcalibur Competitive System Integration (Simplified Design)
+
+### Design Philosophy
+The Rowcalibur competitive system has been simplified to provide a clean, single-point-of-control architecture:
+
+- **Single Point of Control**: Gauntlet is the primary entity - creation and deletion manages all related data
+- **Minimal Configuration**: Removed complex configuration objects in favor of simple relational structure  
+- **CASCADE Deletes**: When a gauntlet is deleted, all related data is automatically removed
+- **1:1 Relationship**: Each gauntlet has exactly one ladder (auto-created)
+- **No Redundancy**: Eliminated duplicate fields between gauntlets and ladders
+
+### CASCADE Delete Chain
+```
+DELETE gauntlet → CASCADE deletes:
+├── gauntlet_lineups
+│   └── gauntlet_seat_assignments
+├── gauntlet_matches
+│   └── ladder_progressions (via match_id)
+└── ladders
+    ├── ladder_positions
+    └── ladder_progressions (via ladder_id)
+```
 
 ### 6. Gauntlet System
 ```
 athletes (UUID) ←→ gauntlets (UUID) [created_by]
-gauntlets (UUID) ←→ gauntlet_matches (UUID)
-gauntlet_matches (UUID) ←→ gauntlet_lineups (UUID) [2 per match]
-gauntlet_lineups (UUID) ←→ gauntlet_seat_assignments (UUID)
+gauntlets (UUID) ←→ gauntlet_matches (UUID) [CASCADE]
+gauntlets (UUID) ←→ gauntlet_lineups (UUID) [CASCADE]
+gauntlet_matches (UUID) ←→ gauntlet_lineups (UUID) [2 per match, SET NULL]
+gauntlet_lineups (UUID) ←→ gauntlet_seat_assignments (UUID) [CASCADE]
 boats (UUID) ←→ gauntlet_lineups (UUID)
-teams (INTEGER) ←→ gauntlet_lineups (UUID) [OPTIONAL]
-athletes (UUID) ←→ gauntlet_seat_assignments (UUID)
-gauntlet_matches (UUID) ←→ ladder_progressions (UUID) [OPTIONAL]
+athletes (UUID) ←→ gauntlet_seat_assignments (UUID) [CASCADE]
+gauntlet_matches (UUID) ←→ ladder_progressions (UUID) [CASCADE]
 ```
 
 **Key Relationships:**
@@ -456,16 +468,16 @@ gauntlet_matches (UUID) ←→ ladder_progressions (UUID) [OPTIONAL]
 
 ### 7. Ladder System
 ```
-athletes (UUID) ←→ ladders (UUID) [created_by]
-ladders (UUID) ←→ ladder_positions (UUID)
-ladders (UUID) ←→ ladder_progressions (UUID)
-athletes (UUID) ←→ ladder_positions (UUID)
-athletes (UUID) ←→ ladder_progressions (UUID)
-gauntlet_matches (UUID) ←→ ladder_progressions (UUID) [OPTIONAL]
+gauntlets (UUID) ←→ ladders (UUID) [1:1, CASCADE]
+ladders (UUID) ←→ ladder_positions (UUID) [CASCADE]
+ladders (UUID) ←→ ladder_progressions (UUID) [CASCADE]
+athletes (UUID) ←→ ladder_positions (UUID) [CASCADE]
+athletes (UUID) ←→ ladder_progressions (UUID) [CASCADE]
+gauntlet_matches (UUID) ←→ ladder_progressions (UUID) [CASCADE]
 ```
 
 **Key Relationships:**
-- **One-to-Many**: Athletes → Ladders (as creator)
+- **One-to-One**: Gauntlets → Ladders (auto-created, CASCADE)
 - **One-to-Many**: Ladders → LadderPositions
 - **One-to-Many**: Ladders → LadderProgressions
 - **One-to-Many**: Athletes → LadderPositions
@@ -506,8 +518,9 @@ Regatta → Race → Lineup (optional)
 Athlete → RegattaRegistration → Regatta
 ```
 
-### 13. Rowcalibur Competitive Workflow
+### 13. Rowcalibur Competitive Workflow (Simplified)
 ```
+Athlete → Gauntlet → Ladder (auto-created)
 Athlete → Gauntlet → GauntletMatch → GauntletLineup (2 per match) → GauntletSeatAssignment
 Athlete → GauntletMatch → LadderProgression (optional)
 Athlete → Ladder → LadderPosition → LadderProgression
