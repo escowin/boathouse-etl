@@ -523,18 +523,20 @@ CREATE TABLE gauntlets (
     name TEXT NOT NULL,
     description TEXT,
     boat_type TEXT NOT NULL CHECK (boat_type IN ('1x', '2x', '2-', '4x', '4+', '8+')),
-    created_by UUID REFERENCES athletes(athlete_id),
+    created_by UUID NOT NULL REFERENCES athletes(athlete_id),
     
     -- Status (enhanced to match IndexedDB)
-    status TEXT DEFAULT 'setup' CHECK (status IN ('setup', 'active', 'completed', 'cancelled')),
-    
-    -- Configuration (JSONB for flexible boat configuration)
-    configuration JSONB,
-    
+    status TEXT NOT NULL DEFAULT 'setup' CHECK (status IN ('setup', 'active', 'completed', 'cancelled')),
+
     -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Indexes for gauntlets table
+CREATE INDEX idx_gauntlets_created_by ON gauntlets(created_by);
+CREATE INDEX idx_gauntlets_status ON gauntlets(status);
+CREATE INDEX idx_gauntlets_boat_type ON gauntlets(boat_type);
 
 CREATE TABLE gauntlet_matches (
     match_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

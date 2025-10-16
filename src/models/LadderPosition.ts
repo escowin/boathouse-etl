@@ -63,7 +63,8 @@ LadderPosition.init(
       references: {
         model: 'ladders',
         key: 'ladder_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     athlete_id: {
       type: DataTypes.UUID,
@@ -71,7 +72,8 @@ LadderPosition.init(
       references: {
         model: 'athletes',
         key: 'athlete_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     position: {
       type: DataTypes.INTEGER,

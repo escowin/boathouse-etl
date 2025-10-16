@@ -51,7 +51,8 @@ GauntletMatch.init(
       references: {
         model: 'gauntlets',
         key: 'gauntlet_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     workout: {
       type: DataTypes.TEXT,

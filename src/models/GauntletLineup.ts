@@ -5,25 +5,21 @@ import sequelize from '../config/database';
 interface GauntletLineupAttributes {
   gauntlet_lineup_id: string;
   gauntlet_id: string;
+  match_id?: string; // Optional - null during configuration, populated when match is created
   boat_id: string;
-  team_id?: number;
-  name: string;
-  description?: string;
   created_at: Date;
   updated_at: Date;
 }
 
 // Define the creation attributes interface
-interface GauntletLineupCreationAttributes extends Optional<GauntletLineupAttributes, 'gauntlet_lineup_id' | 'team_id' | 'description' | 'created_at' | 'updated_at'> {}
+interface GauntletLineupCreationAttributes extends Optional<GauntletLineupAttributes, 'gauntlet_lineup_id' | 'match_id' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
 class GauntletLineup extends Model<GauntletLineupAttributes, GauntletLineupCreationAttributes> implements GauntletLineupAttributes {
   public gauntlet_lineup_id!: string;
   public gauntlet_id!: string;
+  public match_id?: string;
   public boat_id!: string;
-  public team_id?: number;
-  public name!: string;
-  public description?: string;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -50,6 +46,15 @@ GauntletLineup.init(
       },
       onDelete: 'CASCADE'
     },
+    match_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'gauntlet_matches',
+        key: 'match_id'
+      },
+      onDelete: 'SET NULL'
+    },
     boat_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -57,22 +62,6 @@ GauntletLineup.init(
         model: 'boats',
         key: 'boat_id'
       }
-    },
-    team_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'teams',
-        key: 'team_id'
-      }
-    },
-    name: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
     },
     created_at: {
       type: DataTypes.DATE,
@@ -98,13 +87,13 @@ GauntletLineup.init(
         fields: ['gauntlet_id']
       },
       {
+        name: 'idx_gauntlet_lineups_match_id',
+        fields: ['match_id']
+      },
+      {
         name: 'idx_gauntlet_lineups_boat_id',
         fields: ['boat_id']
       },
-      {
-        name: 'idx_gauntlet_lineups_team_id',
-        fields: ['team_id']
-      }
     ]
   }
 );

@@ -297,16 +297,7 @@ export function setupAssociations() {
     as: 'boat'
   });
 
-  // Team -> GauntletLineup (One-to-Many) - optional relationship
-  Team.hasMany(GauntletLineup, {
-    foreignKey: 'team_id',
-    as: 'gauntlet_lineups'
-  });
-
-  GauntletLineup.belongsTo(Team, {
-    foreignKey: 'team_id',
-    as: 'team'
-  });
+  // Note: Removed Team -> GauntletLineup relationship as team_id was removed from gauntlet_lineups
 
   // GauntletLineup -> GauntletSeatAssignment (One-to-Many)
   GauntletLineup.hasMany(GauntletSeatAssignment, {
@@ -330,15 +321,15 @@ export function setupAssociations() {
     as: 'athlete'
   });
 
-  // Athlete -> Ladder (One-to-Many) - created_by relationship
-  Athlete.hasMany(Ladder, {
-    foreignKey: 'created_by',
-    as: 'created_ladders'
+  // Gauntlet -> Ladder (One-to-One) - simplified relationship
+  Gauntlet.hasOne(Ladder, {
+    foreignKey: 'gauntlet_id',
+    as: 'ladder'
   });
 
-  Ladder.belongsTo(Athlete, {
-    foreignKey: 'created_by',
-    as: 'creator'
+  Ladder.belongsTo(Gauntlet, {
+    foreignKey: 'gauntlet_id',
+    as: 'gauntlet'
   });
 
   // Ladder -> LadderPosition (One-to-Many)

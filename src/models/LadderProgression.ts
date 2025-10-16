@@ -51,7 +51,8 @@ LadderProgression.init(
       references: {
         model: 'ladders',
         key: 'ladder_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     athlete_id: {
       type: DataTypes.UUID,
@@ -59,7 +60,8 @@ LadderProgression.init(
       references: {
         model: 'athletes',
         key: 'athlete_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     from_position: {
       type: DataTypes.INTEGER,
@@ -83,7 +85,8 @@ LadderProgression.init(
       references: {
         model: 'gauntlet_matches',
         key: 'match_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     notes: {
       type: DataTypes.TEXT,

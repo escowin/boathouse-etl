@@ -4,10 +4,7 @@ import sequelize from '../config/database';
 // Define the attributes interface
 interface LadderAttributes {
   ladder_id: string; // Changed to UUID
-  name: string;
-  type: '1x' | '2x' | '2-' | '4+' | '8+';
-  created_by: string; // UUID reference to athletes
-  settings: any; // JSONB field for flexible configuration
+  gauntlet_id: string; // UUID reference to gauntlets
   created_at: Date;
   updated_at: Date;
 }
@@ -18,10 +15,7 @@ interface LadderCreationAttributes extends Optional<LadderAttributes, 'ladder_id
 // Define the model class
 class Ladder extends Model<LadderAttributes, LadderCreationAttributes> implements LadderAttributes {
   public ladder_id!: string;
-  public name!: string;
-  public type!: '1x' | '2x' | '2-' | '4+' | '8+';
-  public created_by!: string;
-  public settings!: any;
+  public gauntlet_id!: string;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -39,26 +33,14 @@ Ladder.init(
       primaryKey: true,
       allowNull: false
     },
-    name: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    type: {
-      type: DataTypes.ENUM('1x', '2x', '2-', '4+', '8+'),
-      allowNull: false
-    },
-    created_by: {
+    gauntlet_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'athletes',
-        key: 'athlete_id'
-      }
-    },
-    settings: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-      defaultValue: {}
+        model: 'gauntlets',
+        key: 'gauntlet_id'
+      },
+      onDelete: 'CASCADE'
     },
     created_at: {
       type: DataTypes.DATE,
@@ -80,12 +62,8 @@ Ladder.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        name: 'idx_ladders_type',
-        fields: ['type']
-      },
-      {
-        name: 'idx_ladders_created_by',
-        fields: ['created_by']
+        name: 'idx_ladders_gauntlet_id',
+        fields: ['gauntlet_id']
       }
     ]
   }

@@ -9,13 +9,12 @@ interface GauntletAttributes {
   boat_type: '1x' | '2x' | '2-' | '4x' | '4+' | '8+';
   created_by: string; // UUID reference to athletes
   status: 'setup' | 'active' | 'completed' | 'cancelled';
-  configuration?: any; // JSONB field for flexible boat configuration
   created_at: Date;
   updated_at: Date;
 }
 
 // Define the creation attributes interface (optional fields for creation)
-interface GauntletCreationAttributes extends Optional<GauntletAttributes, 'gauntlet_id' | 'description' | 'configuration' | 'created_at' | 'updated_at'> {}
+interface GauntletCreationAttributes extends Optional<GauntletAttributes, 'gauntlet_id' | 'description' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
 class Gauntlet extends Model<GauntletAttributes, GauntletCreationAttributes> implements GauntletAttributes {
@@ -25,7 +24,6 @@ class Gauntlet extends Model<GauntletAttributes, GauntletCreationAttributes> imp
   public boat_type!: '1x' | '2x' | '2-' | '4x' | '4+' | '8+';
   public created_by!: string;
   public status!: 'setup' | 'active' | 'completed' | 'cancelled';
-  public configuration?: any;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -67,10 +65,6 @@ Gauntlet.init(
       type: DataTypes.ENUM('setup', 'active', 'completed', 'cancelled'),
       allowNull: false,
       defaultValue: 'setup'
-    },
-    configuration: {
-      type: DataTypes.JSONB,
-      allowNull: true
     },
     created_at: {
       type: DataTypes.DATE,

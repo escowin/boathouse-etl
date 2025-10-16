@@ -221,7 +221,6 @@ erDiagram
         enum boat_type
         uuid created_by FK
         enum status
-        jsonb configuration
         timestamp created_at
         timestamp updated_at
     }

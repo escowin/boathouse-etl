@@ -56,7 +56,8 @@ GauntletSeatAssignment.init(
       references: {
         model: 'athletes',
         key: 'athlete_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     seat_number: {
       type: DataTypes.INTEGER,
