@@ -27,6 +27,14 @@ interface AthleteAttributes {
   ban_reason?: 'misconduct' | 'safety_violation' | 'harassment' | 'other';
   ban_date?: Date;
   ban_notes?: string;
+  // PIN Authentication fields
+  pin_hash?: string;
+  pin_salt?: string;
+  pin_created_at?: Date;
+  last_login?: Date;
+  failed_login_attempts: number;
+  locked_until?: Date;
+  pin_reset_required: boolean;
   created_at: Date;
   updated_at: Date;
   etl_source: string;
@@ -39,7 +47,8 @@ interface AthleteCreationAttributes extends Optional<AthleteAttributes,
   'birth_year' | 'sweep_scull' | 'port_starboard' | 
   'bow_in_dark' | 'weight_kg' | 'height_cm' |'experience_years' | 'usra_age_category_id' | 'us_rowing_number' | 'emergency_contact' | 
   'emergency_contact_phone' | 'active' | 'competitive_status' | 'retirement_reason' | 'retirement_date' | 
-  'ban_reason' | 'ban_date' | 'ban_notes' | 'created_at' | 'updated_at' | 
+  'ban_reason' | 'ban_date' | 'ban_notes' | 'pin_hash' | 'pin_salt' | 'pin_created_at' | 
+  'last_login' | 'failed_login_attempts' | 'locked_until' | 'pin_reset_required' | 'created_at' | 'updated_at' | 
   'etl_source' | 'etl_last_sync'
 > {}
 
@@ -68,6 +77,14 @@ class Athlete extends Model<AthleteAttributes, AthleteCreationAttributes> implem
   public ban_reason?: 'misconduct' | 'safety_violation' | 'harassment' | 'other';
   public ban_date?: Date;
   public ban_notes?: string;
+  // PIN Authentication fields
+  public pin_hash?: string;
+  public pin_salt?: string;
+  public pin_created_at?: Date;
+  public last_login?: Date;
+  public failed_login_attempts!: number;
+  public locked_until?: Date;
+  public pin_reset_required!: boolean;
   public created_at!: Date;
   public updated_at!: Date;
   public etl_source!: string;
@@ -217,6 +234,44 @@ Athlete.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    // PIN Authentication fields
+    pin_hash: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Hashed PIN for authentication',
+    },
+    pin_salt: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Salt used for PIN hashing',
+    },
+    pin_created_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'When the PIN was first created',
+    },
+    last_login: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Last successful login timestamp',
+    },
+    failed_login_attempts: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Number of consecutive failed login attempts',
+    },
+    locked_until: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Account lockout expiration timestamp',
+    },
+    pin_reset_required: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Whether user must reset PIN on next login',
+    },
   },
   {
     sequelize,
@@ -240,6 +295,15 @@ Athlete.init(
       },
       {
         fields: ['weight_kg'],
+      },
+      {
+        fields: ['last_login'],
+      },
+      {
+        fields: ['locked_until'],
+      },
+      {
+        fields: ['pin_reset_required'],
       },
     ],
   }

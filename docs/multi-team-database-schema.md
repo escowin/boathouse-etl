@@ -76,6 +76,15 @@ CREATE TABLE athletes (
     ban_date DATE,
     ban_notes TEXT,
     
+    -- PIN Authentication
+    pin_hash VARCHAR(255),
+    pin_salt VARCHAR(255),
+    pin_created_at TIMESTAMP,
+    last_login TIMESTAMP,
+    failed_login_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
+    pin_reset_required BOOLEAN DEFAULT false,
+    
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -89,7 +98,32 @@ CREATE INDEX idx_athletes_type ON athletes(type);
 CREATE INDEX idx_athletes_active ON athletes(active);
 CREATE INDEX idx_athletes_competitive_status ON athletes(competitive_status);
 CREATE INDEX idx_athletes_weight ON athletes(weight_kg);
+-- PIN Authentication indexes
+CREATE INDEX idx_athletes_last_login ON athletes(last_login);
+CREATE INDEX idx_athletes_locked_until ON athletes(locked_until);
+CREATE INDEX idx_athletes_pin_reset_required ON athletes(pin_reset_required);
 ```
+
+#### PIN Authentication System
+The athletes table includes a 6-digit PIN authentication system:
+
+**Security Features:**
+- **PIN Storage**: 6-digit PINs are hashed with bcrypt and stored with unique salts
+- **Account Lockout**: Progressive lockout after failed attempts (3 attempts = 5min, 5 attempts = 15min, 6+ attempts = 1hr)
+- **Rate Limiting**: Maximum 10 login attempts per 5-minute window
+- **PIN Reset**: First-time users must change from default PIN (121212)
+- **Session Management**: JWT tokens with 24-hour expiration and 7-day refresh tokens
+
+**PIN Fields:**
+- `pin_hash`: bcrypt hashed PIN (never store plaintext)
+- `pin_salt`: Unique salt for each PIN
+- `pin_created_at`: When PIN was first created
+- `last_login`: Last successful login timestamp
+- `failed_login_attempts`: Consecutive failed attempts counter
+- `locked_until`: Account lockout expiration
+- `pin_reset_required`: Force PIN change on next login
+
+**Default PINs**: All athletes start with PIN `121212` and must change it on first login.
 
 ### 2. Boats Table
 Enhanced from current boat structure:
