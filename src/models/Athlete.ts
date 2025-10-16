@@ -21,6 +21,12 @@ interface AthleteAttributes {
   emergency_contact?: string;
   emergency_contact_phone?: string;
   active: boolean;
+  competitive_status: 'active' | 'inactive' | 'retired' | 'banned';
+  retirement_reason?: 'deceased' | 'transferred' | 'graduated' | 'personal' | 'unknown';
+  retirement_date?: Date;
+  ban_reason?: 'misconduct' | 'safety_violation' | 'harassment' | 'other';
+  ban_date?: Date;
+  ban_notes?: string;
   created_at: Date;
   updated_at: Date;
   etl_source: string;
@@ -32,7 +38,8 @@ interface AthleteCreationAttributes extends Optional<AthleteAttributes,
   'athlete_id' | 'email' | 'phone' | 'gender' | 
   'birth_year' | 'sweep_scull' | 'port_starboard' | 
   'bow_in_dark' | 'weight_kg' | 'height_cm' |'experience_years' | 'usra_age_category_id' | 'us_rowing_number' | 'emergency_contact' | 
-  'emergency_contact_phone' | 'active' | 'created_at' | 'updated_at' | 
+  'emergency_contact_phone' | 'active' | 'competitive_status' | 'retirement_reason' | 'retirement_date' | 
+  'ban_reason' | 'ban_date' | 'ban_notes' | 'created_at' | 'updated_at' | 
   'etl_source' | 'etl_last_sync'
 > {}
 
@@ -55,6 +62,12 @@ class Athlete extends Model<AthleteAttributes, AthleteCreationAttributes> implem
   public emergency_contact?: string;
   public emergency_contact_phone?: string;
   public active!: boolean;
+  public competitive_status!: 'active' | 'inactive' | 'retired' | 'banned';
+  public retirement_reason?: 'deceased' | 'transferred' | 'graduated' | 'personal' | 'unknown';
+  public retirement_date?: Date;
+  public ban_reason?: 'misconduct' | 'safety_violation' | 'harassment' | 'other';
+  public ban_date?: Date;
+  public ban_notes?: string;
   public created_at!: Date;
   public updated_at!: Date;
   public etl_source!: string;
@@ -163,6 +176,31 @@ Athlete.init(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    competitive_status: {
+      type: DataTypes.ENUM('active', 'inactive', 'retired', 'banned'),
+      allowNull: false,
+      defaultValue: 'active',
+    },
+    retirement_reason: {
+      type: DataTypes.ENUM('deceased', 'transferred', 'graduated', 'personal', 'unknown'),
+      allowNull: true,
+    },
+    retirement_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    ban_reason: {
+      type: DataTypes.ENUM('misconduct', 'safety_violation', 'harassment', 'other'),
+      allowNull: true,
+    },
+    ban_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    ban_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -196,6 +234,9 @@ Athlete.init(
       },
       {
         fields: ['active'],
+      },
+      {
+        fields: ['competitive_status'],
       },
       {
         fields: ['weight_kg'],

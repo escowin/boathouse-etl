@@ -69,6 +69,12 @@ CREATE TABLE athletes (
     
     -- Status
     active BOOLEAN DEFAULT true,
+    competitive_status TEXT DEFAULT 'active' CHECK (competitive_status IN ('active', 'inactive', 'retired', 'banned')),
+    retirement_reason TEXT CHECK (retirement_reason IN ('deceased', 'transferred', 'graduated', 'personal', 'unknown')),
+    retirement_date DATE,
+    ban_reason TEXT CHECK (ban_reason IN ('misconduct', 'safety_violation', 'harassment', 'other')),
+    ban_date DATE,
+    ban_notes TEXT,
     
     -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,6 +87,7 @@ CREATE TABLE athletes (
 CREATE INDEX idx_athletes_name ON athletes(name);
 CREATE INDEX idx_athletes_type ON athletes(type);
 CREATE INDEX idx_athletes_active ON athletes(active);
+CREATE INDEX idx_athletes_competitive_status ON athletes(competitive_status);
 CREATE INDEX idx_athletes_weight ON athletes(weight_kg);
 ```
 

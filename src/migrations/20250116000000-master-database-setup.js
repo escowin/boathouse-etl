@@ -122,6 +122,31 @@ module.exports = {
           allowNull: false,
           defaultValue: true
         },
+        competitive_status: {
+          type: Sequelize.ENUM('active', 'inactive', 'retired', 'banned'),
+          allowNull: false,
+          defaultValue: 'active'
+        },
+        retirement_reason: {
+          type: Sequelize.ENUM('deceased', 'transferred', 'graduated', 'personal', 'unknown'),
+          allowNull: true
+        },
+        retirement_date: {
+          type: Sequelize.DATE,
+          allowNull: true
+        },
+        ban_reason: {
+          type: Sequelize.ENUM('misconduct', 'safety_violation', 'harassment', 'other'),
+          allowNull: true
+        },
+        ban_date: {
+          type: Sequelize.DATE,
+          allowNull: true
+        },
+        ban_notes: {
+          type: Sequelize.TEXT,
+          allowNull: true
+        },
         created_at: {
           type: Sequelize.DATE,
           allowNull: false,
@@ -1276,12 +1301,34 @@ module.exports = {
         }
       }, { transaction });
 
+      // Seed USRA Categories with simplified names
+      console.log('📋 Seeding USRA categories...');
+      await queryInterface.bulkInsert('usra_categories', [
+        { start_age: 0, end_age: 14, category: 'U15' },
+        { start_age: 15, end_age: 16, category: 'U17' },
+        { start_age: 17, end_age: 18, category: 'U19' },
+        { start_age: 19, end_age: 20, category: 'U23' },
+        { start_age: 21, end_age: 26, category: 'AA' },
+        { start_age: 27, end_age: 35, category: 'A' },
+        { start_age: 36, end_age: 42, category: 'B' },
+        { start_age: 43, end_age: 49, category: 'C' },
+        { start_age: 50, end_age: 54, category: 'D' },
+        { start_age: 55, end_age: 59, category: 'E' },
+        { start_age: 60, end_age: 64, category: 'F' },
+        { start_age: 65, end_age: 69, category: 'G' },
+        { start_age: 70, end_age: 74, category: 'H' },
+        { start_age: 75, end_age: 79, category: 'I' },
+        { start_age: 80, end_age: 84, category: 'J' },
+        { start_age: 85, end_age: 110, category: 'K' }
+      ], { transaction });
+
       // Create indexes for performance
       console.log('📋 Creating indexes...');
       
       // Athletes indexes
       await queryInterface.addIndex('athletes', ['usra_age_category_id'], { name: 'idx_athletes_usra_category', transaction });
       await queryInterface.addIndex('athletes', ['active'], { name: 'idx_athletes_active', transaction });
+      await queryInterface.addIndex('athletes', ['competitive_status'], { name: 'idx_athletes_competitive_status', transaction });
       await queryInterface.addIndex('athletes', ['type'], { name: 'idx_athletes_type', transaction });
       
       // Teams indexes
@@ -1418,6 +1465,9 @@ module.exports = {
       console.log('  ✅ Full regatta and race tracking');
       console.log('  ✅ Comprehensive athlete and boat management');
       console.log('  ✅ ETL job tracking and monitoring');
+      console.log('  ✅ Enhanced athlete competitive status system (active, inactive, retired, banned)');
+      console.log('  ✅ Simplified USRA age categories (U15, U17, U19, U23, AA, A, B, C, D, E, F, G, H, I, J, K)');
+      console.log('  ✅ System-wide access control for banned athletes');
 
     } catch (error) {
       await transaction.rollback();

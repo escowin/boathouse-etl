@@ -33,6 +33,8 @@
     "etl:status": "ts-node src/etl/index.ts status",
     "migrate:up": "npx sequelize-cli db:migrate",
     "migrate:down": "npx sequelize-cli db:migrate:undo",
+    "migrate:status": "npx sequelize-cli db:migrate:status",
+    "deploy:production": "node scripts/deploy-to-production.js",
     "seed:mailing-lists": "ts-node src/scripts/seed-mailing-lists.ts",
     "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
     "test:models": "ts-node src/scripts/test-models.ts",

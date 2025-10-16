@@ -33,6 +33,12 @@ erDiagram
         text emergency_contact
         text emergency_contact_phone
         boolean active
+        enum competitive_status
+        enum retirement_reason
+        date retirement_date
+        enum ban_reason
+        date ban_date
+        text ban_notes
         timestamp created_at
         timestamp updated_at
         text etl_source
