@@ -168,7 +168,7 @@ export class LineupETL extends BaseETLProcess {
           try {
             boat = await Boat.create({
               name: 'Eights',
-              type: 'Eight',
+              type: '8+',
               status: 'Available',
               description: 'Generic Eights boat for lineup assignments',
               etl_source: 'lineup_etl_seed',

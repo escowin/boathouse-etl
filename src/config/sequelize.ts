@@ -1,4 +1,3 @@
-import { Sequelize } from 'sequelize';
 import { config } from './database';
 import { env } from './env';
 

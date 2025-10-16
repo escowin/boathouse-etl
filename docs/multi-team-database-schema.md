@@ -111,7 +111,7 @@ The athletes table includes a 6-digit PIN authentication system:
 - **PIN Storage**: 6-digit PINs are hashed with bcrypt and stored with unique salts
 - **Account Lockout**: Progressive lockout after failed attempts (3 attempts = 5min, 5 attempts = 15min, 6+ attempts = 1hr)
 - **Rate Limiting**: Maximum 10 login attempts per 5-minute window
-- **PIN Reset**: First-time users must change from default PIN (121212)
+- **PIN Reset**: First-time users must change from default PIN
 - **Session Management**: JWT tokens with 24-hour expiration and 7-day refresh tokens
 
 **PIN Fields:**
@@ -123,7 +123,7 @@ The athletes table includes a 6-digit PIN authentication system:
 - `locked_until`: Account lockout expiration
 - `pin_reset_required`: Force PIN change on next login
 
-**Default PINs**: All athletes start with PIN `121212` and must change it on first login.
+**Default PINs**: All athletes start with PIN and must change it on first login.
 
 ### 2. Boats Table
 Enhanced from current boat structure:

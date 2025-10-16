@@ -111,13 +111,12 @@ async function testModels() {
     
     const testTeam = Team.build({
       name: 'test-team',
-      display_name: 'Test Team',
       team_type: 'Masters'
     });
     
     const testBoat = Boat.build({
       name: 'Test Boat',
-      type: 'Eight',
+      type: '8+',
       status: 'Available'
     });
     
