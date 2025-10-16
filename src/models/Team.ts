@@ -9,14 +9,13 @@ interface TeamAttributes {
   description?: string;
   head_coach_id?: string;
   assistant_coaches?: string[];
-  mailing_list_id?: number;
   created_at: Date;
   updated_at: Date;
 }
 
 // Define the creation attributes
 interface TeamCreationAttributes extends Optional<TeamAttributes,
-  'team_id' | 'team_type' | 'description' | 'head_coach_id' | 'assistant_coaches' | 'mailing_list_id' |
+  'team_id' | 'team_type' | 'description' | 'head_coach_id' | 'assistant_coaches' |
   'created_at' | 'updated_at'
 > {}
 
@@ -27,7 +26,6 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> implements Team
   public description?: string;
   public head_coach_id?: string;
   public assistant_coaches?: string[];
-  public mailing_list_id?: number;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -68,14 +66,6 @@ Team.init(
       allowNull: true,
       defaultValue: [],
     },
-    mailing_list_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'mailing_lists',
-        key: 'mailing_list_id',
-      },
-    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -98,9 +88,6 @@ Team.init(
       },
       {
         fields: ['team_type'],
-      },
-      {
-        fields: ['mailing_list_id'],
       },
     ],
   }

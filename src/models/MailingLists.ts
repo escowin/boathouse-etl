@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 // Define the attributes interface
 interface MailingListAttributes {
   mailing_list_id: number;
+  team_id?: number; // Optional - some teams may not have mailing lists
   name: string;
   email: string;
   description?: string;
@@ -19,6 +20,7 @@ interface MailingListCreationAttributes extends Optional<MailingListAttributes,
 
 class MailingList extends Model<MailingListAttributes, MailingListCreationAttributes> implements MailingListAttributes {
   public mailing_list_id!: number;
+  public team_id?: number; // Optional - some teams may not have mailing lists
   public name!: string;
   public email!: string;
   public description?: string;
@@ -38,6 +40,15 @@ MailingList.init(
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,
+    },
+    team_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Some teams may not have mailing lists
+      references: {
+        model: 'teams',
+        key: 'team_id',
+      },
+      onDelete: 'CASCADE',
     },
     name: {
       type: DataTypes.STRING(255),
@@ -88,6 +99,9 @@ MailingList.init(
       },
       {
         fields: ['active'],
+      },
+      {
+        fields: ['team_id'],
       },
     ],
   }

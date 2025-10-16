@@ -174,15 +174,15 @@ export function setupAssociations() {
     as: 'athletes'
   });
 
-  // Team -> MailingList (Many-to-One)
-  Team.belongsTo(MailingList, {
-    foreignKey: 'mailing_list_id',
+  // Team -> MailingList (One-to-Zero-or-One)
+  Team.hasOne(MailingList, {
+    foreignKey: 'team_id',
     as: 'mailing_list'
   });
 
-  MailingList.hasMany(Team, {
-    foreignKey: 'mailing_list_id',
-    as: 'teams'
+  MailingList.belongsTo(Team, {
+    foreignKey: 'team_id',
+    as: 'team'
   });
 
   // Regatta associations

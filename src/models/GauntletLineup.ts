@@ -61,7 +61,8 @@ GauntletLineup.init(
       references: {
         model: 'boats',
         key: 'boat_id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     created_at: {
       type: DataTypes.DATE,
