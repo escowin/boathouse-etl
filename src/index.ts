@@ -8,6 +8,10 @@ import { setupAssociations } from './models';
 import authRoutes from './auth/routes';
 import { practiceSessionsRouter } from './routes/practiceSessions';
 import { attendanceRouter } from './routes/attendance';
+import { gauntletRouter } from './routes/gauntlets';
+import { gauntletMatchRouter } from './routes/gauntletMatches';
+import { ladderRouter } from './routes/ladders';
+import { ladderPositionRouter } from './routes/ladderPositions';
 
 // Load environment variables
 dotenv.config();
@@ -65,6 +69,10 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRoutes);
 app.use('/api/practice-sessions', practiceSessionsRouter);
 app.use('/api/attendance', attendanceRouter);
+app.use('/api/gauntlets', gauntletRouter);
+app.use('/api/gauntlet-matches', gauntletMatchRouter);
+app.use('/api/ladders', ladderRouter);
+app.use('/api/ladder-positions', ladderPositionRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -78,6 +86,10 @@ app.get('/', (_req, res) => {
         auth: '/auth',
         practiceSessions: '/api/practice-sessions',
         attendance: '/api/attendance',
+        gauntlets: '/api/gauntlets',
+        gauntletMatches: '/api/gauntlet-matches',
+        ladders: '/api/ladders',
+        ladderPositions: '/api/ladder-positions',
         health: '/health'
       }
     },
@@ -115,6 +127,10 @@ app.listen(PORT, () => {
   console.log(`🔐 Auth endpoints: http://localhost:${PORT}/auth`);
   console.log(`📅 Practice sessions: http://localhost:${PORT}/api/practice-sessions`);
   console.log(`✅ Attendance: http://localhost:${PORT}/api/attendance`);
+  console.log(`🏆 Gauntlets: http://localhost:${PORT}/api/gauntlets`);
+  console.log(`⚔️ Gauntlet matches: http://localhost:${PORT}/api/gauntlet-matches`);
+  console.log(`📈 Ladders: http://localhost:${PORT}/api/ladders`);
+  console.log(`🎯 Ladder positions: http://localhost:${PORT}/api/ladder-positions`);
   console.log(`🌐 CORS origin: ${process.env['CORS_ORIGIN'] || '*'}`);
 });
 
