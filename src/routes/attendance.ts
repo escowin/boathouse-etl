@@ -30,14 +30,14 @@ router.get('/athlete/:athleteId', authMiddleware.verifyToken, async (req: Reques
 
     // Filter by date range
     if (startDate || endDate) {
-      whereClause['$PracticeSession.date$'] = {};
-      if (startDate) whereClause['$PracticeSession.date$'][Op.gte] = startDate;
-      if (endDate) whereClause['$PracticeSession.date$'][Op.lte] = endDate;
+      whereClause['$session.date$'] = {};
+      if (startDate) whereClause['$session.date$'][Op.gte] = startDate;
+      if (endDate) whereClause['$session.date$'][Op.lte] = endDate;
     }
 
     const includeOptions = includeSessions === 'true' ? [{
       model: PracticeSession,
-      as: 'PracticeSession',
+      as: 'session',
       attributes: [
         'session_id',
         'team_id',
@@ -333,16 +333,16 @@ router.get('/stats/athlete/:athleteId', authMiddleware.verifyToken, async (req: 
 
     // Filter by date range
     if (startDate || endDate) {
-      whereClause['$PracticeSession.date$'] = {};
-      if (startDate) whereClause['$PracticeSession.date$'][Op.gte] = startDate;
-      if (endDate) whereClause['$PracticeSession.date$'][Op.lte] = endDate;
+      whereClause['$session.date$'] = {};
+      if (startDate) whereClause['$session.date$'][Op.gte] = startDate;
+      if (endDate) whereClause['$session.date$'][Op.lte] = endDate;
     }
 
     const attendanceRecords = await Attendance.findAll({
       where: whereClause,
       include: [{
         model: PracticeSession,
-        as: 'PracticeSession',
+        as: 'session',
         attributes: ['date']
       }],
       attributes: ['status']
