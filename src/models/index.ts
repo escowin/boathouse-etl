@@ -171,7 +171,7 @@ export function setupAssociations() {
 
   UsraCategory.hasMany(Athlete, {
     foreignKey: 'usra_age_category_id',
-    as: 'athletes'
+    as: 'category_athletes'
   });
 
   // Team -> MailingList (One-to-Zero-or-One)
@@ -278,7 +278,7 @@ export function setupAssociations() {
   // Gauntlet -> GauntletLineup (One-to-Many)
   Gauntlet.hasMany(GauntletLineup, {
     foreignKey: 'gauntlet_id',
-    as: 'lineups'
+    as: 'gauntlet_lineups'
   });
 
   GauntletLineup.belongsTo(Gauntlet, {
@@ -302,7 +302,7 @@ export function setupAssociations() {
   // GauntletLineup -> GauntletSeatAssignment (One-to-Many)
   GauntletLineup.hasMany(GauntletSeatAssignment, {
     foreignKey: 'gauntlet_lineup_id',
-    as: 'seat_assignments'
+    as: 'gauntlet_seat_assignments'
   });
 
   GauntletSeatAssignment.belongsTo(GauntletLineup, {

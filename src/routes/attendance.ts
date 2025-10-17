@@ -66,7 +66,7 @@ router.get('/athlete/:athleteId', authMiddleware.verifyToken, async (req: Reques
       ]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: attendanceRecords,
       message: `Found ${attendanceRecords.length} attendance records`,
@@ -75,7 +75,7 @@ router.get('/athlete/:athleteId', authMiddleware.verifyToken, async (req: Reques
 
   } catch (error: any) {
     console.error('Error fetching athlete attendance:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch attendance records',
@@ -117,7 +117,7 @@ router.get('/session/:sessionId', authMiddleware.verifyToken, async (req: Reques
       ]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: attendanceRecords,
       message: `Found ${attendanceRecords.length} attendance records for session`,
@@ -126,7 +126,7 @@ router.get('/session/:sessionId', authMiddleware.verifyToken, async (req: Reques
 
   } catch (error: any) {
     console.error('Error fetching session attendance:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch session attendance',
@@ -202,7 +202,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       });
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: attendanceRecord,
       message: 'Attendance marked successfully',
@@ -211,7 +211,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
   } catch (error: any) {
     console.error('Error marking attendance:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to mark attendance',
@@ -262,7 +262,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
     await attendanceRecord.update(updateData);
 
-    res.json({
+    return res.json({
       success: true,
       data: attendanceRecord,
       message: 'Attendance record updated successfully',
@@ -271,7 +271,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error updating attendance:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to update attendance record',
@@ -300,7 +300,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
     await attendanceRecord.destroy();
 
-    res.json({
+    return res.json({
       success: true,
       data: null,
       message: 'Attendance record deleted successfully',
@@ -309,7 +309,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
   } catch (error: any) {
     console.error('Error deleting attendance:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to delete attendance record',
@@ -360,7 +360,7 @@ router.get('/stats/athlete/:athleteId', authMiddleware.verifyToken, async (req: 
       ? ((statusCounts['Yes'] || 0) / totalSessions * 100).toFixed(1)
       : '0.0';
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         totalSessions,
@@ -374,7 +374,7 @@ router.get('/stats/athlete/:athleteId', authMiddleware.verifyToken, async (req: 
 
   } catch (error: any) {
     console.error('Error fetching attendance statistics:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch attendance statistics',

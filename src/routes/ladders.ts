@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { Ladder, LadderPosition, LadderProgression, Athlete, Gauntlet } from '../models';
+import { Ladder, LadderPosition, Athlete, Gauntlet } from '../models';
 import { authMiddleware } from '../auth/middleware';
 
 const router = Router();
@@ -8,7 +8,7 @@ const router = Router();
  * GET /api/ladders
  * Get all ladders
  */
-router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+router.get('/', authMiddleware.verifyToken, async (_req: Request, res: Response) => {
   try {
     const ladders = await Ladder.findAll({
       include: [
@@ -21,7 +21,7 @@ router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) 
       order: [['created_at', 'DESC']]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: ladders,
       message: `Found ${ladders.length} ladders`,
@@ -30,7 +30,7 @@ router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) 
 
   } catch (error: any) {
     console.error('Error fetching ladders:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch ladders',
@@ -70,7 +70,7 @@ router.get('/:id/positions', authMiddleware.verifyToken, async (req: Request, re
       order: [['position', 'ASC']]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: positions,
       message: `Found ${positions.length} ladder positions`,
@@ -79,7 +79,7 @@ router.get('/:id/positions', authMiddleware.verifyToken, async (req: Request, re
 
   } catch (error: any) {
     console.error('Error fetching ladder positions:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch ladder positions',

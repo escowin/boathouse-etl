@@ -115,7 +115,7 @@ router.get('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: session,
       message: 'Practice session retrieved successfully',
@@ -124,7 +124,7 @@ router.get('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error fetching practice session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch practice session',
@@ -169,7 +169,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       notes
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: session,
       message: 'Practice session created successfully',
@@ -178,7 +178,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
   } catch (error: any) {
     console.error('Error creating practice session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to create practice session',
@@ -208,7 +208,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
     await session.update(updateData);
 
-    res.json({
+    return res.json({
       success: true,
       data: session,
       message: 'Practice session updated successfully',
@@ -217,7 +217,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error updating practice session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to update practice session',
@@ -246,7 +246,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
     await session.destroy();
 
-    res.json({
+    return res.json({
       success: true,
       data: null,
       message: 'Practice session deleted successfully',
@@ -255,7 +255,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
   } catch (error: any) {
     console.error('Error deleting practice session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to delete practice session',

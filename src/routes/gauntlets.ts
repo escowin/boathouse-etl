@@ -7,11 +7,9 @@ import {
   Ladder,
   LadderPosition,
   LadderProgression,
-  Athlete,
-  Boat
+  Athlete
 } from '../models';
 import { authMiddleware } from '../auth/middleware';
-import { Op } from 'sequelize';
 
 const router = Router();
 
@@ -45,7 +43,7 @@ router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) 
       order: [['created_at', 'DESC']]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: gauntlets,
       message: `Found ${gauntlets.length} gauntlets`,
@@ -54,7 +52,7 @@ router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) 
 
   } catch (error: any) {
     console.error('Error fetching gauntlets:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch gauntlets',
@@ -108,7 +106,7 @@ router.get('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: gauntlet,
       message: 'Gauntlet retrieved successfully',
@@ -117,7 +115,7 @@ router.get('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error fetching gauntlet:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch gauntlet',
@@ -182,7 +180,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
     });
 
     // Create associated ladder
-    const ladder = await Ladder.create({
+    await Ladder.create({
       gauntlet_id: gauntlet.gauntlet_id
     });
 
@@ -201,7 +199,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       ]
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: createdGauntlet,
       message: 'Gauntlet created successfully',
@@ -210,7 +208,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
   } catch (error: any) {
     console.error('Error creating gauntlet:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to create gauntlet',
@@ -281,7 +279,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       ]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedGauntlet,
       message: 'Gauntlet updated successfully',
@@ -290,7 +288,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error updating gauntlet:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to update gauntlet',
@@ -335,7 +333,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
     // Delete the gauntlet (cascade delete will handle related records)
     await gauntlet.destroy();
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         gauntletDeleted: true,
@@ -353,7 +351,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
   } catch (error: any) {
     console.error('Error deleting gauntlet:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to delete gauntlet',
@@ -386,7 +384,7 @@ router.get('/:id/matches', authMiddleware.verifyToken, async (req: Request, res:
       order: [['match_date', 'DESC']]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: matches,
       message: `Found ${matches.length} matches for gauntlet`,
@@ -395,7 +393,7 @@ router.get('/:id/matches', authMiddleware.verifyToken, async (req: Request, res:
 
   } catch (error: any) {
     console.error('Error fetching gauntlet matches:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to fetch gauntlet matches',

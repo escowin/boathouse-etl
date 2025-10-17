@@ -81,7 +81,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       notes
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: match,
       message: 'Gauntlet match created successfully',
@@ -90,7 +90,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
   } catch (error: any) {
     console.error('Error creating gauntlet match:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to create gauntlet match',
@@ -153,7 +153,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
     await match.update(updates);
 
-    res.json({
+    return res.json({
       success: true,
       data: match,
       message: 'Gauntlet match updated successfully',
@@ -162,7 +162,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error updating gauntlet match:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to update gauntlet match',
@@ -191,7 +191,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
     await match.destroy();
 
-    res.json({
+    return res.json({
       success: true,
       data: { success: true },
       message: 'Gauntlet match deleted successfully',
@@ -200,7 +200,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
 
   } catch (error: any) {
     console.error('Error deleting gauntlet match:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to delete gauntlet match',

@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import { setupAssociations } from './models';
 
 // Import route handlers
 import authRoutes from './auth/routes';
@@ -19,8 +18,8 @@ dotenv.config();
 const app = express();
 const PORT = parseInt(process.env['PORT'] || '3000', 10);
 
-// Setup model associations
-setupAssociations();
+// Setup model associations (already called in models/index.ts)
+// setupAssociations();
 
 // Global rate limiting
 const globalLimiter = rateLimit({
@@ -122,6 +121,21 @@ app.use((error: any, _req: express.Request, res: express.Response, _next: expres
 
 // Start server
 app.listen(PORT, () => {
+  console.log(`
+__________              __  .__                                         ______________________.____     
+\______   \ _________ _/  |_|  |__   ____  __ __  ______ ____           \_   _____/\__    ___/|    |    
+ |    |  _//  _ \__  \\   __\  |  \ /  _ \|  |  \/  ___// __ \   ______  |    __)_   |    |   |    |    
+ |    |   (  <_> ) __ \|  | |   Y  (  <_> )  |  /\___ \\  ___/  /_____/  |        \  |    |   |    |___ 
+ |______  /\____(____  /__| |___|  /\____/|____//____  >\___  >         /_______  /  |____|   |_______ \
+        \/           \/          \/                  \/     \/                  \/                    \
+        
+ ______               __   __                                   _______ _______ _____   
+|   __ \.-----.---.-.|  |_|  |--.-----.--.--.-----.-----.______|    ___|_     _|     |_ 
+|   __ <|  _  |  _  ||   _|     |  _  |  |  |__ --|  -__|______|    ___| |   | |       |
+|______/|_____|___._||____|__|__|_____|_____|_____|_____|      |_______| |___| |_______|
+                                                                                                `)
+
+  console.log(`🔐 Environment: ${process.env['NODE_ENV'] || `undefined`}`);
   console.log(`🚀 Boathouse ETL API server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth endpoints: http://localhost:${PORT}/auth`);

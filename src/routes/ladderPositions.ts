@@ -130,7 +130,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       ]
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: createdPosition,
       message: 'Ladder position created successfully',
@@ -139,7 +139,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
   } catch (error: any) {
     console.error('Error creating ladder position:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to create ladder position',
@@ -207,7 +207,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       ]
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedPosition,
       message: 'Ladder position updated successfully',
@@ -216,7 +216,7 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Error updating ladder position:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       data: null,
       message: 'Failed to update ladder position',

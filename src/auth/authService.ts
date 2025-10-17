@@ -353,24 +353,26 @@ export class AuthService {
   /**
    * Get list of active athletes for login dropdown
    */
-  public async getActiveAthletes(): Promise<Array<{athlete_id: string; name: string; email?: string}>> {
+  public async getActiveAthletes(): Promise<Array<{athlete_id: string; name: string}>> {
     try {
+      console.log('🔍 AuthService: Fetching active athletes...');
+      
       const athletes = await Athlete.findAll({
         where: {
           active: true,
           competitive_status: 'active'
         },
-        attributes: ['athlete_id', 'name', 'email'],
-        order: [['name', 'ASC']]
+        attributes: ['athlete_id', 'name'],
+        order: [['name', 'ASC']],
+        raw: true // Use raw query to avoid Sequelize model issues
       });
 
-      return athletes.map(athlete => ({
-        athlete_id: athlete.athlete_id,
-        name: athlete.name,
-        ...(athlete.email && { email: athlete.email })
-      }));
+      console.log('🔍 AuthService: Found', athletes.length, 'athletes from database');
+      console.log('🔍 AuthService: First athlete sample:', athletes[0] || 'No athletes found');
+
+      return athletes;
     } catch (error) {
-      console.error('Get active athletes error:', error);
+      console.error('❌ Get active athletes error:', error);
       return [];
     }
   }
