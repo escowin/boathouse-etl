@@ -116,18 +116,18 @@ router.post('/verify', async (req: Request, res: Response) => {
       });
     }
 
-    const payload = authService.verifyToken(token);
+    const result = await authService.verifyToken(token);
     
-    if (!payload) {
+    if (!result.success) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token',
-        error: 'INVALID_TOKEN'
+        message: result.message || 'Invalid or expired token',
+        error: result.error || 'INVALID_TOKEN'
       });
     }
 
     // Get fresh athlete data
-    const athlete = await authService.getAthleteById(payload.athlete_id);
+    const athlete = await authService.getAthleteById(result.data!.athlete_id);
     
     if (!athlete) {
       return res.status(404).json({
@@ -246,6 +246,50 @@ router.post('/change-pin', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Change PIN route error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * POST /auth/verify-token
+ * Verify JWT token (for centralized authentication)
+ */
+router.post('/verify-token', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization header missing or invalid',
+        error: 'MISSING_AUTH_HEADER'
+      });
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    // Verify the token using the auth service
+    const result = await authService.verifyToken(token);
+    
+    if (result.success) {
+      return res.json({
+        success: true,
+        data: result.data,
+        message: 'Token verified successfully'
+      });
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: result.message || 'Token verification failed',
+        error: result.error || 'TOKEN_VERIFICATION_FAILED'
+      });
+    }
+
+  } catch (error) {
+    console.error('Token verification route error:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',

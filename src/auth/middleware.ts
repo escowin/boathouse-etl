@@ -48,19 +48,19 @@ export class AuthMiddleware {
       }
 
       // Verify token
-      const payload = this.authService.verifyToken(token);
+      const result = await this.authService.verifyToken(token);
       
-      if (!payload) {
+      if (!result.success) {
         res.status(401).json({
           success: false,
-          message: 'Invalid or expired token',
-          error: 'INVALID_TOKEN'
+          message: result.message || 'Invalid or expired token',
+          error: result.error || 'INVALID_TOKEN'
         });
         return;
       }
 
       // Verify athlete still exists and is active
-      const athlete = await this.authService.getAthleteById(payload.athlete_id);
+      const athlete = await this.authService.getAthleteById(result.data!.athlete_id);
       
       if (!athlete || !athlete.active || athlete.competitive_status !== 'active') {
         res.status(401).json({
@@ -72,7 +72,7 @@ export class AuthMiddleware {
       }
 
       // Add user info to request
-      req.user = payload;
+      req.user = result.data!;
       next();
 
     } catch (error) {
@@ -109,14 +109,14 @@ export class AuthMiddleware {
       }
 
       // Try to verify token
-      const payload = this.authService.verifyToken(token);
+      const result = await this.authService.verifyToken(token);
       
-      if (payload) {
+      if (result.success) {
         // Verify athlete still exists and is active
-        const athlete = await this.authService.getAthleteById(payload.athlete_id);
+        const athlete = await this.authService.getAthleteById(result.data!.athlete_id);
         
         if (athlete && athlete.active && athlete.competitive_status === 'active') {
-          req.user = payload;
+          req.user = result.data!;
         }
       }
 

@@ -63,16 +63,6 @@ export class AuthService {
     } as jwt.SignOptions);
   }
 
-  /**
-   * Verify JWT token
-   */
-  public verifyToken(token: string): JwtPayload | null {
-    try {
-      return jwt.verify(token, authConfig.jwtSecret) as JwtPayload;
-    } catch (error) {
-      return null;
-    }
-  }
 
   /**
    * Check if account is locked
@@ -307,6 +297,33 @@ export class AuthService {
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
+      };
+    }
+  }
+
+  /**
+   * Verify JWT token
+   */
+  public async verifyToken(token: string): Promise<{ success: boolean; data?: any; message?: string; error?: string }> {
+    try {
+      const payload = jwt.verify(token, authConfig.jwtSecret) as any;
+      
+      return {
+        success: true,
+        data: {
+          athlete_id: payload.athlete_id,
+          name: payload.name,
+          email: payload.email,
+          iat: payload.iat,
+          exp: payload.exp
+        }
+      };
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return {
+        success: false,
+        message: 'Invalid or expired token',
+        error: 'INVALID_TOKEN'
       };
     }
   }
