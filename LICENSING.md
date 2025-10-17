@@ -39,7 +39,3 @@ This software is protected by copyright law. Unauthorized use may result in lega
 ## Effective Date
 
 This licensing policy is effective as of October 12, 2025.
-
----
-
-**Important**: This software was previously available under MIT License. All previous open source permissions are hereby revoked. Any use of this software must comply with the new proprietary license terms.
