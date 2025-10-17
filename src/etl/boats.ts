@@ -116,11 +116,11 @@ export class BoatsETL extends BaseETLProcess {
     if (name === detailedType && ['Eights', 'Fours', 'Quads', 'Pairs', 'Singles'].includes(name)) {
       // This is a pseudo-header row, determine the boat type
       const typeMapping: { [key: string]: string } = {
-        'Eights': 'Eight',
-        'Fours': 'Four', 
-        'Quads': 'Quad',
-        'Pairs': 'Pair',
-        'Singles': 'Single'
+        'Eights': '8+',
+        'Fours': '4+', 
+        'Quads': '4x',
+        'Pairs': '2-',
+        'Singles': '1x'
       };
       
       const actualType = typeMapping[name];
@@ -161,22 +161,22 @@ export class BoatsETL extends BaseETLProcess {
     
     // First, check the explicit Type column (Column C)
     if (boatType === 'Double') {
-      actualBoatType = 'Double';
+      actualBoatType = '2x';
     }
     else if (boatType === 'Quad') {
-      actualBoatType = 'Quad';
+      actualBoatType = '4x';
     }
     else if (boatType === 'Pair') {
-      actualBoatType = 'Pair';
+      actualBoatType = '2-';
     }
     else if (boatType === 'Four') {
-      actualBoatType = 'Four';
+      actualBoatType = '4+';
     }
     else if (boatType === 'Eight') {
-      actualBoatType = 'Eight';
+      actualBoatType = '8+';
     }
     else if (boatType === 'Single') {
-      actualBoatType = 'Single';
+      actualBoatType = '1x';
     }
     // Fallback to name/status analysis if Type column doesn't match (like Rowcalibur)
     else {
@@ -186,7 +186,7 @@ export class BoatsETL extends BaseETLProcess {
           (detailedType || '').toLowerCase().includes('2x') ||
           (detailedType || '').toLowerCase().includes('[2]') ||
           name === 'Doubles') {
-        actualBoatType = 'Double';
+        actualBoatType = '2x';
       }
       // Check if this is a quad scull (4x) boat
       else if ((name || '').toLowerCase().includes('quad') || 
@@ -194,7 +194,7 @@ export class BoatsETL extends BaseETLProcess {
                (detailedType || '').toLowerCase().includes('4x') ||
                (detailedType || '').toLowerCase().includes('[q]') ||
                name === 'Quads') {
-        actualBoatType = 'Quad';
+        actualBoatType = '4x';
       }
       // Check if this is a pair (2-) boat
       else if ((name || '').toLowerCase().includes('pair') || 
@@ -202,7 +202,7 @@ export class BoatsETL extends BaseETLProcess {
                (detailedType || '').toLowerCase().includes('2-') ||
                (detailedType || '').toLowerCase().includes('[p]') ||
                name === 'Pairs') {
-        actualBoatType = 'Pair';
+        actualBoatType = '2-';
       }
       // Check if this is a four (4+) boat
       else if ((name || '').toLowerCase().includes('four') || 
@@ -210,7 +210,7 @@ export class BoatsETL extends BaseETLProcess {
                (detailedType || '').toLowerCase().includes('4+') ||
                (detailedType || '').toLowerCase().includes('[4]') ||
                name === 'Fours') {
-        actualBoatType = 'Four';
+        actualBoatType = '4+';
       }
       // Check if this is an eight (8+) boat
       else if ((name || '').toLowerCase().includes('eight') || 
@@ -218,7 +218,7 @@ export class BoatsETL extends BaseETLProcess {
                (detailedType || '').toLowerCase().includes('8+') ||
                (detailedType || '').toLowerCase().includes('[8]') ||
                name === 'Eights') {
-        actualBoatType = 'Eight';
+        actualBoatType = '8+';
       }
       // Check if this is a single (1x) boat
       else if ((name || '').toLowerCase().includes('single') || 
@@ -226,7 +226,7 @@ export class BoatsETL extends BaseETLProcess {
                (detailedType || '').toLowerCase().includes('1x') ||
                (detailedType || '').toLowerCase().includes('[1]') ||
                name === 'Singles') {
-        actualBoatType = 'Single';
+        actualBoatType = '1x';
       }
     }
     
@@ -286,7 +286,7 @@ export class BoatsETL extends BaseETLProcess {
       }
 
       // Type validation
-      if (boat.type && !['Single', 'Double', 'Pair', 'Quad', 'Four', 'Eight'].includes(boat.type)) {
+      if (boat.type && !['1x', '2x', '2-', '4x', '4+', '8+'].includes(boat.type)) {
         errors.push(`Row ${i + 1}: Invalid type '${boat.type}'`);
       }
 
