@@ -306,7 +306,9 @@ export class AuthService {
    */
   public async verifyToken(token: string): Promise<{ success: boolean; data?: any; message?: string; error?: string }> {
     try {
+      
       const payload = jwt.verify(token, authConfig.jwtSecret) as any;
+      
       
       return {
         success: true,
@@ -319,7 +321,7 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('Token verification error:', error);
+      console.error('JWT verification error:', error);
       return {
         success: false,
         message: 'Invalid or expired token',
@@ -373,9 +375,10 @@ export class AuthService {
   /**
    * Get athlete by ID (for token verification)
    */
-  public async getAthleteById(athleteId: string): Promise<Athlete | null> {
+  public async getAthleteById(athleteId: string): Promise<any | null> {
     try {
-      return await Athlete.findByPk(athleteId);
+      const athlete = await Athlete.findByPk(athleteId, { raw: true });
+      return athlete;
     } catch (error) {
       console.error('Get athlete error:', error);
       return null;
@@ -387,7 +390,7 @@ export class AuthService {
    */
   public async getActiveAthletes(): Promise<Array<{athlete_id: string; name: string}>> {
     try {
-      console.log('🔍 AuthService: Fetching active athletes...');
+      // console.log('🔍 AuthService: Fetching active athletes...');
       
       const athletes = await Athlete.findAll({
         where: {
@@ -399,8 +402,8 @@ export class AuthService {
         raw: true // Use raw query to avoid Sequelize model issues
       });
 
-      console.log('🔍 AuthService: Found', athletes.length, 'athletes from database');
-      console.log('🔍 AuthService: First athlete sample:', athletes[0] || 'No athletes found');
+      // console.log('🔍 AuthService: Found', athletes.length, 'athletes from database');
+      // console.log('🔍 AuthService: First athlete sample:', athletes[0] || 'No athletes found');
 
       return athletes;
     } catch (error) {

@@ -11,6 +11,7 @@ export const authConfig: AuthConfig = {
   defaultPin: process.env['DEFAULT_PIN'] || '000000'
 };
 
+
 // PIN validation rules
 export const PIN_VALIDATION = {
   length: 6

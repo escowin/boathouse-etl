@@ -14,7 +14,7 @@ router.use(authMiddleware.verifyToken);
  */
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    console.log('🔍 Athletes API: Fetching detailed athlete data...');
+    // console.log('🔍 Athletes API: Fetching detailed athlete data...');
     
     const athletes = await Athlete.findAll({
       where: {
@@ -25,13 +25,13 @@ router.get('/', async (_req: Request, res: Response) => {
       raw: true
     });
 
-    console.log('🔍 Athletes API: Found', athletes.length, 'athletes from database');
-    console.log('🔍 Athletes API: First athlete sample:', athletes[0] ? {
-      athlete_id: athletes[0].athlete_id,
-      name: athletes[0].name,
-      type: athletes[0].type,
-      gender: athletes[0].gender
-    } : 'No athletes found');
+    // console.log('🔍 Athletes API: Found', athletes.length, 'athletes from database');
+    // console.log('🔍 Athletes API: First athlete sample:', athletes[0] ? {
+    //   athlete_id: athletes[0].athlete_id,
+    //   name: athletes[0].name,
+    //   type: athletes[0].type,
+    //   gender: athletes[0].gender
+    // } : 'No athletes found');
 
     return res.json({
       success: true,
@@ -56,7 +56,7 @@ router.get('/', async (_req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    console.log('🔍 Athletes API: Fetching athlete profile for ID:', id);
+    // console.log('🔍 Athletes API: Fetching athlete profile for ID:', id);
     
     const athlete = await Athlete.findOne({
       where: {
@@ -74,7 +74,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    console.log('🔍 Athletes API: Found athlete:', athlete.name);
+    // console.log('🔍 Athletes API: Found athlete:', athlete.name);
 
     return res.json({
       success: true,
