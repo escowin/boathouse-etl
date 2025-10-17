@@ -220,6 +220,41 @@ router.post('/set-default-pin', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /auth/change-pin
+ * Change PIN for an athlete (for beta testing flow)
+ */
+router.post('/change-pin', async (req: Request, res: Response) => {
+  try {
+    const { athleteId, currentPin, newPin } = req.body;
+
+    if (!athleteId || !currentPin || !newPin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Athlete ID, current PIN, and new PIN are required',
+        error: 'MISSING_REQUIRED_FIELDS'
+      });
+    }
+
+    const result = await authService.changePin({ athleteId, currentPin, newPin });
+    
+    if (result.success) {
+      return res.json(result);
+    } else {
+      const statusCode = result.error === 'ATHLETE_NOT_FOUND' ? 404 : 400;
+      return res.status(statusCode).json(result);
+    }
+
+  } catch (error) {
+    console.error('Change PIN route error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
  * GET /auth/health
  * Health check endpoint
  */

@@ -13,12 +13,8 @@ export const authConfig: AuthConfig = {
 
 // PIN validation rules
 export const PIN_VALIDATION = {
-  length: 6,
-  weakPatterns: [
-    '123456', '654321', '111111', '000000',
-    '123123', '456789', '789012', '012345',
-    '121212', '212121', '111222', '222111'
-  ]
+  length: 6
+  // Removed weakPatterns - users can choose any PIN they want
 };
 
 // Rate limiting configuration

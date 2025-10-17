@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 
 // Import route handlers
 import authRoutes from './auth/routes';
+import athletesRouter from './routes/athletes';
 import { practiceSessionsRouter } from './routes/practiceSessions';
 import { attendanceRouter } from './routes/attendance';
 import { gauntletRouter } from './routes/gauntlets';
@@ -66,6 +67,7 @@ app.get('/health', (_req, res) => {
 
 // API Routes
 app.use('/auth', authRoutes);
+app.use('/api/athletes', athletesRouter);
 app.use('/api/practice-sessions', practiceSessionsRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/gauntlets', gauntletRouter);
@@ -122,13 +124,6 @@ app.use((error: any, _req: express.Request, res: express.Response, _next: expres
 // Start server
 app.listen(PORT, () => {
   console.log(`
-__________              __  .__                                         ______________________.____     
-\______   \ _________ _/  |_|  |__   ____  __ __  ______ ____           \_   _____/\__    ___/|    |    
- |    |  _//  _ \__  \\   __\  |  \ /  _ \|  |  \/  ___// __ \   ______  |    __)_   |    |   |    |    
- |    |   (  <_> ) __ \|  | |   Y  (  <_> )  |  /\___ \\  ___/  /_____/  |        \  |    |   |    |___ 
- |______  /\____(____  /__| |___|  /\____/|____//____  >\___  >         /_______  /  |____|   |_______ \
-        \/           \/          \/                  \/     \/                  \/                    \
-        
  ______               __   __                                   _______ _______ _____   
 |   __ \.-----.---.-.|  |_|  |--.-----.--.--.-----.-----.______|    ___|_     _|     |_ 
 |   __ <|  _  |  _  ||   _|     |  _  |  |  |__ --|  -__|______|    ___| |   | |       |

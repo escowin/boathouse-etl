@@ -14,6 +14,8 @@ export interface LoginResponse {
       email?: string;
       pin_reset_required: boolean;
     };
+    requires_pin_change?: boolean;
+    is_default_pin?: boolean;
   };
   message: string;
   error?: string;

@@ -12,7 +12,7 @@ import {
 
 export class AuthService {
   /**
-   * Validate PIN format and strength
+   * Validate PIN format
    */
   private validatePin(pin: string): { valid: boolean; error?: string } {
     if (!pin || typeof pin !== 'string') {
@@ -25,10 +25,6 @@ export class AuthService {
 
     if (!/^\d+$/.test(pin)) {
       return { valid: false, error: 'PIN must contain only numbers' };
-    }
-
-    if (PIN_VALIDATION.weakPatterns.includes(pin)) {
-      return { valid: false, error: 'PIN is too weak. Please choose a different PIN.' };
     }
 
     return { valid: true };
@@ -81,7 +77,7 @@ export class AuthService {
   /**
    * Check if account is locked
    */
-  private isAccountLocked(athlete: Athlete): boolean {
+  private isAccountLocked(athlete: any): boolean {
     if (!athlete.locked_until) {
       return false;
     }
@@ -91,22 +87,26 @@ export class AuthService {
   /**
    * Lock account for specified duration
    */
-  private async lockAccount(athlete: Athlete, duration: number): Promise<void> {
+  private async lockAccount(athleteId: string, duration: number): Promise<void> {
     const lockUntil = new Date(Date.now() + duration);
-    await athlete.update({
+    await Athlete.update({
       locked_until: lockUntil,
-      failed_login_attempts: athlete.failed_login_attempts + 1
+      failed_login_attempts: Athlete.sequelize!.literal('failed_login_attempts + 1')
+    }, {
+      where: { athlete_id: athleteId }
     });
   }
 
   /**
    * Unlock account and reset failed attempts
    */
-  private async unlockAccount(athlete: Athlete): Promise<void> {
-    await athlete.update({
+  private async unlockAccount(athleteId: string): Promise<void> {
+    await Athlete.update({
       locked_until: null as any,
       failed_login_attempts: 0,
       last_login: new Date()
+    }, {
+      where: { athlete_id: athleteId }
     });
   }
 
@@ -128,7 +128,7 @@ export class AuthService {
       }
 
       // Find athlete
-      const athlete = await Athlete.findByPk(athleteId);
+      const athlete = await Athlete.findByPk(athleteId, { raw: true });
       if (!athlete) {
         return {
           success: false,
@@ -156,6 +156,18 @@ export class AuthService {
         };
       }
 
+      // Check if PIN reset is required (only check for default PIN if reset is required)
+      if (athlete.pin_reset_required) {
+        const isDefaultPin = pin === authConfig.defaultPin;
+        return {
+          success: false,
+          message: isDefaultPin 
+            ? 'Please set a new PIN to continue. The default PIN must be changed for security.'
+            : 'PIN reset required. Please contact administrator.',
+          error: 'PIN_RESET_REQUIRED'
+        };
+      }
+
       // Verify PIN
       const pinValid = await this.comparePin(pin, athlete.pin_hash);
       if (!pinValid) {
@@ -164,7 +176,7 @@ export class AuthService {
         
         if (newAttempts >= authConfig.maxLoginAttempts) {
           // Lock account
-          await this.lockAccount(athlete, authConfig.lockoutDuration);
+          await this.lockAccount(athleteId, authConfig.lockoutDuration);
           return {
             success: false,
             message: `Account locked due to ${authConfig.maxLoginAttempts} failed attempts`,
@@ -172,7 +184,10 @@ export class AuthService {
           };
         } else {
           // Update failed attempts
-          await athlete.update({ failed_login_attempts: newAttempts });
+          await Athlete.update(
+            { failed_login_attempts: newAttempts },
+            { where: { athlete_id: athleteId } }
+          );
           return {
             success: false,
             message: `Invalid PIN. ${authConfig.maxLoginAttempts - newAttempts} attempts remaining.`,
@@ -182,7 +197,7 @@ export class AuthService {
       }
 
       // Successful login - unlock account and generate tokens
-      await this.unlockAccount(athlete);
+      await this.unlockAccount(athleteId);
 
       const tokenPayload = {
         athlete_id: athlete.athlete_id,
