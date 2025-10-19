@@ -62,11 +62,36 @@ export class AuthMiddleware {
       // Verify athlete still exists and is active
       const athlete = await this.authService.getAthleteById(result.data!.athlete_id);
       
-      if (!athlete || !athlete.active || athlete.competitive_status !== 'active') {
+      console.log('🔍 Auth Middleware - Athlete lookup result:', {
+        found: !!athlete,
+        athlete_id: result.data!.athlete_id,
+        active: athlete?.active,
+        competitive_status: athlete?.competitive_status
+      });
+      
+      if (!athlete) {
+        res.status(401).json({
+          success: false,
+          message: 'Athlete not found',
+          error: 'ATHLETE_NOT_FOUND'
+        });
+        return;
+      }
+      
+      if (!athlete.active) {
         res.status(401).json({
           success: false,
           message: 'Athlete account is inactive',
           error: 'INACTIVE_ACCOUNT'
+        });
+        return;
+      }
+      
+      if (athlete.competitive_status !== 'active') {
+        res.status(401).json({
+          success: false,
+          message: `Athlete competitive status is ${athlete.competitive_status}, not active`,
+          error: 'INACTIVE_COMPETITIVE_STATUS'
         });
         return;
       }

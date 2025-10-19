@@ -307,9 +307,15 @@ export class AuthService {
    */
   public async verifyToken(token: string): Promise<{ success: boolean; data?: any; message?: string; error?: string }> {
     try {
-      
+      console.log('🔍 AuthService - Verifying JWT token...');
       const payload = jwt.verify(token, authConfig.jwtSecret) as any;
-      
+      console.log('🔍 AuthService - JWT payload:', {
+        athlete_id: payload.athlete_id,
+        name: payload.name,
+        email: payload.email,
+        iat: payload.iat,
+        exp: payload.exp
+      });
       
       return {
         success: true,
@@ -323,7 +329,7 @@ export class AuthService {
         }
       };
     } catch (error) {
-      console.error('JWT verification error:', error);
+      console.error('❌ JWT verification error:', error);
       return {
         success: false,
         message: 'Invalid or expired token',
@@ -379,10 +385,18 @@ export class AuthService {
    */
   public async getAthleteById(athleteId: string): Promise<any | null> {
     try {
+      console.log('🔍 AuthService - Looking up athlete:', athleteId);
       const athlete = await Athlete.findByPk(athleteId, { raw: true });
+      console.log('🔍 AuthService - Athlete lookup result:', {
+        found: !!athlete,
+        athlete_id: athlete?.athlete_id,
+        name: athlete?.name,
+        active: athlete?.active,
+        competitive_status: athlete?.competitive_status
+      });
       return athlete;
     } catch (error) {
-      console.error('Get athlete error:', error);
+      console.error('❌ Get athlete error:', error);
       return null;
     }
   }

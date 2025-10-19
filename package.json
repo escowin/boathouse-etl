@@ -28,6 +28,7 @@
     "etl:practice-sessions": "ts-node src/etl/index.ts practice-sessions",
     "etl:attendance": "ts-node src/etl/index.ts attendance",
     "etl:lineup": "ts-node src/etl/index.ts lineup",
+    "fix:athlete-status": "ts-node src/scripts/fix-athlete-status.ts",
     "etl:test": "ts-node src/etl/index.ts test",
     "etl:validate": "ts-node src/etl/index.ts validate",
     "etl:status": "ts-node src/etl/index.ts status",
