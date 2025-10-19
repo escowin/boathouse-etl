@@ -1,5 +1,4 @@
-import { Attendance, PracticeSession } from '../models';
-import { Op, Transaction } from 'sequelize';
+import { Attendance } from '../models';
 import sequelize from '../config/database';
 
 export interface AttendanceSubmissionData {
@@ -46,8 +45,7 @@ export class AttendanceService {
         const conflict = await this.resolveConflict(
           data,
           existingRecord,
-          conflictResolution,
-          transaction
+          conflictResolution
         );
 
         if (conflict) {
@@ -60,25 +58,38 @@ export class AttendanceService {
         }
 
         // Update existing record
-        attendanceRecord = await existingRecord.update({
+        const updateData: any = {
           status: data.status,
-          notes: data.notes,
           etl_source: 'api',
           etl_last_sync: new Date()
-        }, { transaction });
+        };
+        
+        if (data.notes !== undefined) {
+          updateData.notes = data.notes;
+        }
+        
+        attendanceRecord = await existingRecord.update(updateData, { transaction });
 
       } else {
         // Create new record with UUID
-        attendanceRecord = await Attendance.create({
-          attendance_id: data.client_id, // Use client ID if provided (for offline sync), otherwise Sequelize will generate one
+        const createData: any = {
           session_id: data.session_id,
           athlete_id: data.athlete_id,
           status: data.status,
-          notes: data.notes,
           team_id: data.team_id,
           etl_source: 'api',
           etl_last_sync: new Date()
-        }, { transaction });
+        };
+        
+        if (data.client_id !== undefined) {
+          createData.attendance_id = data.client_id;
+        }
+        
+        if (data.notes !== undefined) {
+          createData.notes = data.notes;
+        }
+        
+        attendanceRecord = await Attendance.create(createData, { transaction });
       }
 
       await transaction.commit();
@@ -112,8 +123,7 @@ export class AttendanceService {
   private async resolveConflict(
     clientData: AttendanceSubmissionData,
     serverData: Attendance,
-    strategy: AttendanceConflictResolution['strategy'],
-    transaction: Transaction
+    strategy: AttendanceConflictResolution['strategy']
   ): Promise<AttendanceConflictResolution | null> {
     // Check if there's actually a conflict
     const hasConflict = (
@@ -253,7 +263,7 @@ export class AttendanceService {
       });
 
       if (!serverData) {
-        return { data: undefined };
+        return {};
       }
 
       if (clientData) {
@@ -276,7 +286,7 @@ export class AttendanceService {
 
     } catch (error: any) {
       console.error('Error in getAttendanceWithConflictDetection:', error);
-      return { data: undefined };
+      return {};
     }
   }
 
