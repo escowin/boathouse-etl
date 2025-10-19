@@ -19,6 +19,7 @@ router.get('/data/boats', authMiddleware.verifyToken, async (_req: Request, res:
         'name',
         'type',
         'status',
+        'rigging_type',
         'min_weight_kg',
         'max_weight_kg',
         'created_at',
@@ -34,23 +35,18 @@ router.get('/data/boats', authMiddleware.verifyToken, async (_req: Request, res:
     // Group boats by type for frontend consumption
     const boatsByType: { [key: string]: any[] } = {};
     
-    console.log('Backend: Processing', boats.length, 'boats');
-    boats.forEach((boat, index) => {
-      console.log(`Backend: Boat ${index} raw:`, boat);
-      console.log(`Backend: Boat ${index} dataValues:`, boat.dataValues);
-      console.log(`Backend: Boat ${index} toJSON:`, boat.toJSON());
-      
+    boats.forEach((boat, _index) => {
+
       // Use dataValues to get the actual data from Sequelize model
       const boatData = {
         id: boat.dataValues.boat_id,
         name: boat.dataValues.name,
         type: boat.dataValues.type,
+        riggingType: boat.dataValues.rigging_type,
         status: boat.dataValues.status,
         minWeight: boat.dataValues.min_weight_kg,
         maxWeight: boat.dataValues.max_weight_kg
       };
-      
-      console.log(`Backend: Boat ${index} processed:`, boatData);
 
       const typeKey = boatData.type || 'unknown';
       if (!boatsByType[typeKey]) {
@@ -58,8 +54,6 @@ router.get('/data/boats', authMiddleware.verifyToken, async (_req: Request, res:
       }
       boatsByType[typeKey].push(boatData);
     });
-    
-    console.log('Backend: Final boatsByType keys:', Object.keys(boatsByType));
 
     return res.json({
       success: true,

@@ -9,34 +9,37 @@ router.use(authMiddleware.verifyToken);
 
 /**
  * GET /api/athletes
- * Get detailed athlete data (protected endpoint)
- * Returns full athlete profiles with all fields
+ * Get athlete data for IndexedDB storage (protected endpoint)
+ * Returns limited athlete data for team management
  */
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    // console.log('🔍 Athletes API: Fetching detailed athlete data...');
     
     const athletes = await Athlete.findAll({
       where: {
         active: true,
         competitive_status: 'active'
       },
+      attributes: [
+        'athlete_id',
+        'name',
+        'type',
+        'gender',
+        'birth_year',
+        'sweep_scull',
+        'port_starboard',
+        'weight_kg',
+        'height_cm',
+        'usra_age_category_id'
+      ],
       order: [['name', 'ASC']],
       raw: true
     });
 
-    // console.log('🔍 Athletes API: Found', athletes.length, 'athletes from database');
-    // console.log('🔍 Athletes API: First athlete sample:', athletes[0] ? {
-    //   athlete_id: athletes[0].athlete_id,
-    //   name: athletes[0].name,
-    //   type: athletes[0].type,
-    //   gender: athletes[0].gender
-    // } : 'No athletes found');
-
     return res.json({
       success: true,
       data: athletes,
-      message: 'Detailed athlete data retrieved successfully'
+      message: 'Athlete data for IndexedDB retrieved successfully'
     });
 
   } catch (error) {
@@ -51,18 +54,39 @@ router.get('/', async (_req: Request, res: Response) => {
 
 /**
  * GET /api/athletes/:id
- * Get detailed data for a specific athlete (protected endpoint)
+ * Get complete profile data for logged-in user (protected endpoint)
+ * Returns full profile with contact details for local storage
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    // console.log('🔍 Athletes API: Fetching athlete profile for ID:', id);
     
     const athlete = await Athlete.findOne({
       where: {
         athlete_id: id,
         active: true
       },
+      attributes: [
+        'athlete_id',
+        'name',
+        'email',
+        'phone',
+        'type',
+        'gender',
+        'birth_year',
+        'sweep_scull',
+        'port_starboard',
+        'bow_in_dark',
+        'weight_kg',
+        'height_cm',
+        'experience_years',
+        'usra_age_category_id',
+        'us_rowing_number',
+        'emergency_contact',
+        'emergency_contact_phone',
+        'active',
+        'competitive_status'
+      ],
       raw: true
     });
 
@@ -74,12 +98,10 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    // console.log('🔍 Athletes API: Found athlete:', athlete.name);
-
     return res.json({
       success: true,
       data: athlete,
-      message: 'Athlete profile retrieved successfully'
+      message: 'Complete athlete profile retrieved successfully'
     });
 
   } catch (error) {

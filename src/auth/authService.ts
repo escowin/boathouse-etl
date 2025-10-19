@@ -207,7 +207,8 @@ export class AuthService {
             athlete_id: athlete.athlete_id,
             name: athlete.name,
             ...(athlete.email && { email: athlete.email }),
-            pin_reset_required: athlete.pin_reset_required
+            pin_reset_required: athlete.pin_reset_required,
+            // gender: athlete.gender
           }
         },
         message: 'Login successful'
@@ -317,7 +318,8 @@ export class AuthService {
           name: payload.name,
           email: payload.email,
           iat: payload.iat,
-          exp: payload.exp
+          exp: payload.exp,
+          // gender: payload.gender
         }
       };
     } catch (error) {

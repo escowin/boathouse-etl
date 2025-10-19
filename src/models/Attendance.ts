@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface AttendanceAttributes {
-  attendance_id: number;
+  attendance_id: string; // Changed from number to string (UUID)
   session_id: number;
   athlete_id: string;
   status: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused' | null;
@@ -21,7 +21,7 @@ interface AttendanceCreationAttributes extends Optional<AttendanceAttributes,
 > {}
 
 class Attendance extends Model<AttendanceAttributes, AttendanceCreationAttributes> implements AttendanceAttributes {
-  public attendance_id!: number;
+  public attendance_id!: string; // Changed from number to string (UUID)
   public session_id!: number;
   public athlete_id!: string;
   public status!: 'Yes' | 'No' | 'Maybe' | 'Late' | 'Excused' | null;
@@ -40,8 +40,8 @@ class Attendance extends Model<AttendanceAttributes, AttendanceCreationAttribute
 Attendance.init(
   {
     attendance_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },

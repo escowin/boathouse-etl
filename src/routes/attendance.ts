@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { Attendance, PracticeSession } from '../models';
 import { authMiddleware } from '../auth/middleware';
+import { attendanceService } from '../services/attendanceService';
 import { Op } from 'sequelize';
 
 const router = Router();
@@ -138,6 +139,7 @@ router.get('/session/:sessionId', authMiddleware.verifyToken, async (req: Reques
 /**
  * POST /api/attendance
  * Mark attendance for an athlete at a practice session
+ * Enhanced with conflict resolution for concurrent submissions
  */
 router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response) => {
   try {
@@ -146,7 +148,10 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       athlete_id,
       status,
       notes,
-      team_id
+      team_id,
+      client_id,
+      timestamp,
+      conflict_resolution = 'latest_wins'
     } = req.body;
 
     // Validate required fields
@@ -159,52 +164,60 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       });
     }
 
-    // Validate status
-    const validStatuses = ['Yes', 'No', 'Maybe', 'Late', 'Excused'];
-    if (!validStatuses.includes(status)) {
+    // Validate attendance data using service
+    const validation = attendanceService.validateAttendanceData({
+      session_id,
+      athlete_id,
+      status,
+      notes,
+      team_id,
+      client_id,
+      timestamp
+    });
+
+    if (!validation.valid) {
       return res.status(400).json({
         success: false,
         data: null,
-        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
-        error: 'VALIDATION_ERROR'
+        message: 'Validation failed',
+        error: 'VALIDATION_ERROR',
+        details: validation.errors
       });
     }
 
-    // Check if attendance record already exists
-    const existingRecord = await Attendance.findOne({
-      where: {
-        session_id,
-        athlete_id
+    // Use enhanced attendance service for upsert
+    const result = await attendanceService.upsertAttendance({
+      session_id,
+      athlete_id,
+      status,
+      notes,
+      team_id,
+      client_id,
+      timestamp
+    }, conflict_resolution);
+
+    if (!result.success) {
+      if (result.conflict) {
+        return res.status(409).json({
+          success: false,
+          data: null,
+          message: 'Conflict detected',
+          error: 'CONFLICT_ERROR',
+          conflict: result.conflict
+        });
       }
-    });
-
-    let attendanceRecord;
-
-    if (existingRecord) {
-      // Update existing record
-      await existingRecord.update({
-        status,
-        notes,
-        etl_source: 'api',
-        etl_last_sync: new Date()
-      });
-      attendanceRecord = existingRecord;
-    } else {
-      // Create new record
-      attendanceRecord = await Attendance.create({
-        session_id,
-        athlete_id,
-        status,
-        notes,
-        team_id,
-        etl_source: 'api',
-        etl_last_sync: new Date()
+      
+      return res.status(500).json({
+        success: false,
+        data: null,
+        message: 'Failed to mark attendance',
+        error: result.error || 'INTERNAL_ERROR'
       });
     }
 
     return res.status(201).json({
       success: true,
-      data: attendanceRecord,
+      data: result.data,
       message: 'Attendance marked successfully',
       error: null
     });
@@ -313,6 +326,83 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
       success: false,
       data: null,
       message: 'Failed to delete attendance record',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * POST /api/attendance/batch
+ * Batch upsert multiple attendance records
+ * Useful for offline synchronization
+ */
+router.post('/batch', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { records, conflict_resolution = 'latest_wins' } = req.body;
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Records array is required and must not be empty',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate all records
+    const validationErrors: string[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const validation = attendanceService.validateAttendanceData(records[i]);
+      if (!validation.valid) {
+        validationErrors.push(`Record ${i}: ${validation.errors.join(', ')}`);
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Validation failed for some records',
+        error: 'VALIDATION_ERROR',
+        details: validationErrors
+      });
+    }
+
+    // Process batch upsert
+    const result = await attendanceService.batchUpsertAttendance(records, conflict_resolution);
+
+    if (!result.success) {
+      if (result.conflicts && result.conflicts.length > 0) {
+        return res.status(409).json({
+          success: false,
+          data: null,
+          message: `${result.conflicts.length} conflicts detected`,
+          error: 'CONFLICT_ERROR',
+          conflicts: result.conflicts
+        });
+      }
+      
+      return res.status(500).json({
+        success: false,
+        data: null,
+        message: 'Failed to batch upsert attendance',
+        error: result.error || 'INTERNAL_ERROR'
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: result.data,
+      message: `Successfully processed ${result.data?.length || 0} attendance records`,
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error in batch attendance upsert:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to batch upsert attendance',
       error: error.message || 'INTERNAL_ERROR'
     });
   }

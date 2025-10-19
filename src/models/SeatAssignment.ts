@@ -3,8 +3,8 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface SeatAssignmentAttributes {
-  seat_assignment_id: number;
-  lineup_id: number;
+  seat_assignment_id: string; // Changed from number to string (UUID)
+  lineup_id: string; // Changed from number to string (UUID) - references lineup.lineup_id
   athlete_id: string;
   seat_number: number;
   side?: 'Port' | 'Starboard';
@@ -18,8 +18,8 @@ interface SeatAssignmentCreationAttributes extends Optional<SeatAssignmentAttrib
 > {}
 
 class SeatAssignment extends Model<SeatAssignmentAttributes, SeatAssignmentCreationAttributes> implements SeatAssignmentAttributes {
-  public seat_assignment_id!: number;
-  public lineup_id!: number;
+  public seat_assignment_id!: string; // Changed from number to string (UUID)
+  public lineup_id!: string; // Changed from number to string (UUID)
   public athlete_id!: string;
   public seat_number!: number;
   public side?: 'Port' | 'Starboard';
@@ -34,13 +34,13 @@ class SeatAssignment extends Model<SeatAssignmentAttributes, SeatAssignmentCreat
 SeatAssignment.init(
   {
     seat_assignment_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },
     lineup_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'lineups',

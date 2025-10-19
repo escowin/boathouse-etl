@@ -13,6 +13,7 @@ export interface LoginResponse {
       name: string;
       email?: string;
       pin_reset_required: boolean;
+      // gender: string;
     };
     requires_pin_change?: boolean;
     is_default_pin?: boolean;

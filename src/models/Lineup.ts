@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface LineupAttributes {
-  lineup_id: number;
+  lineup_id: string; // Changed from number to string (UUID)
   session_id: number;
   boat_id: string;
   team_id: number;
@@ -26,7 +26,7 @@ interface LineupCreationAttributes extends Optional<LineupAttributes,
 > {}
 
 class Lineup extends Model<LineupAttributes, LineupCreationAttributes> implements LineupAttributes {
-  public lineup_id!: number;
+  public lineup_id!: string; // Changed from number to string (UUID)
   public session_id!: number;
   public boat_id!: string;
   public team_id!: number;
@@ -49,8 +49,8 @@ class Lineup extends Model<LineupAttributes, LineupCreationAttributes> implement
 Lineup.init(
   {
     lineup_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },

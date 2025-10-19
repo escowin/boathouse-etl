@@ -36,6 +36,7 @@
     "migrate:status": "npx sequelize-cli db:migrate:status",
     "deploy:production": "node scripts/deploy-to-production.js",
     "seed:mailing-lists": "ts-node src/scripts/seed-mailing-lists.ts",
+    "seed:practice-sessions": "ts-node src/scripts/seed-practice-sessions.ts",
     "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
     "test:models": "ts-node src/scripts/test-models.ts",
     "test:sheets-data": "ts-node src/scripts/test-google-sheets-data.ts",
