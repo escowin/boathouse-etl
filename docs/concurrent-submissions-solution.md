@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-The system already uses UUIDs for most models (Athlete, Boat, Team, Ladder, Gauntlet, etc.), but `attendance_id`, `lineup_id`, and `seat_assignment_id` were still using auto-incrementing integer IDs, which created race conditions when:
+The system already uses UUIDs for most models (Athlete, Boat, Team, Ladder, Gauntlet, etc.), but `attendance_id`, `lineup_id`, `seat_assignment_id`, and `registration_id` were still using auto-incrementing integer IDs, which created race conditions when:
 
 1. **Multiple users submit attendance simultaneously** - ID conflicts could occur
 2. **Offline submissions sync later** - The auto-increment sequence has moved forward, causing potential conflicts
@@ -13,7 +13,7 @@ The system already uses UUIDs for most models (Athlete, Boat, Team, Ladder, Gaun
 We've implemented a **three-pronged approach** to solve concurrent submission issues:
 
 ### 1. UUID-Based Primary Keys ✅
-- **Replaced** auto-increment integers with UUIDs for `attendance_id`, `lineup_id`, and `seat_assignment_id`
+- **Replaced** auto-increment integers with UUIDs for `attendance_id`, `lineup_id`, `seat_assignment_id`, and `registration_id`
 - **Consistency**: Now matches the existing UUID pattern used by Athlete, Boat, Team, Ladder, Gauntlet, etc.
 - **Benefits**: No ID conflicts, globally unique, offline-safe
 - **Implementation**: Updated models to use `DataTypes.UUID` with `DataTypes.UUIDV4`
@@ -54,6 +54,9 @@ lineup_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
 
 -- seat_assignments table
 seat_assignment_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
+
+-- regatta_registrations table
+registration_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
 ```
 
 ### API Enhancements

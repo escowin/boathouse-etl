@@ -7,8 +7,15 @@ This schema extends the single-team design to support multiple teams within a bo
 ## Design Decisions
 
 ### Primary Key Strategy
-- **Athletes & Boats**: Uses UUID (`athlete_id`, `boats_id`) for global uniqueness across systems
-- **All other tables**: Use auto-increment integers (`SERIAL PRIMARY KEY`) for:
+- **User-manipulatable tables**: Use UUID for global uniqueness and offline sync safety:
+  - `athletes.athlete_id` (UUID)
+  - `boats.boat_id` (UUID) 
+  - `attendance.attendance_id` (UUID)
+  - `lineups.lineup_id` (UUID)
+  - `seat_assignments.seat_assignment_id` (UUID)
+  - `races.race_id` (UUID)
+  - `regatta_registrations.registration_id` (UUID)
+- **System-managed tables**: Use auto-increment integers (`SERIAL PRIMARY KEY`) for:
   - Better performance in joins and queries
   - Smaller storage footprint (4-8 bytes vs 16 bytes)
   - Human-readable IDs for debugging and logs
@@ -255,7 +262,7 @@ Team-specific attendance tracking:
 
 ```sql
 CREATE TABLE attendance (
-    attendance_id SERIAL PRIMARY KEY,
+    attendance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id INTEGER REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
@@ -288,7 +295,7 @@ Team-specific lineup management:
 
 ```sql
 CREATE TABLE lineups (
-    lineup_id SERIAL PRIMARY KEY,
+    lineup_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id INTEGER REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
     boat_id UUID REFERENCES boats(boat_id) ON DELETE CASCADE,
     
@@ -325,7 +332,7 @@ Team-specific regatta participation:
 
 ```sql
 CREATE TABLE regatta_registrations (
-    registration_id SERIAL PRIMARY KEY,
+    registration_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     regatta_id INTEGER REFERENCES regattas(regatta_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     team_id INTEGER REFERENCES teams(team_id), -- Primary team for this regatta
@@ -369,8 +376,8 @@ Detailed seat assignments within lineups:
 
 ```sql
 CREATE TABLE seat_assignments (
-    seat_assignment_id SERIAL PRIMARY KEY,
-    lineup_id INTEGER REFERENCES lineups(lineup_id) ON DELETE CASCADE,
+    seat_assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lineup_id UUID REFERENCES lineups(lineup_id) ON DELETE CASCADE,
     athlete_id UUID REFERENCES athletes(athlete_id) ON DELETE CASCADE,
     
     -- Seat Information
@@ -440,9 +447,9 @@ Individual race events within regattas:
 
 ```sql
 CREATE TABLE races (
-    race_id SERIAL PRIMARY KEY,
+    race_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     regatta_id INTEGER REFERENCES regattas(regatta_id) ON DELETE CASCADE,
-    lineup_id INTEGER REFERENCES lineups(lineup_id),
+    lineup_id UUID REFERENCES lineups(lineup_id),
     
     -- Race Details
     event_name TEXT NOT NULL, -- e.g., "Men's 8+ Heat 1"

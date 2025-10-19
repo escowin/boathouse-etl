@@ -3,9 +3,9 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface RaceAttributes {
-  race_id: number;
+  race_id: string; // Changed from number to string (UUID)
   regatta_id: number;
-  lineup_id?: number;
+  lineup_id?: string; // Changed from number to string (UUID) to match Lineup model
   event_name: string;
   race_date?: Date;
   race_time?: string;
@@ -26,9 +26,9 @@ interface RaceCreationAttributes extends Optional<RaceAttributes,
 > {}
 
 class Race extends Model<RaceAttributes, RaceCreationAttributes> implements RaceAttributes {
-  public race_id!: number;
+  public race_id!: string; // Changed from number to string (UUID)
   public regatta_id!: number;
-  public lineup_id?: number;
+  public lineup_id?: string; // Changed from number to string (UUID) to match Lineup model
   public event_name!: string;
   public race_date?: Date;
   public race_time?: string;
@@ -49,9 +49,10 @@ class Race extends Model<RaceAttributes, RaceCreationAttributes> implements Race
 Race.init(
   {
     race_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false,
     },
     regatta_id: {
       type: DataTypes.INTEGER,
@@ -62,7 +63,7 @@ Race.init(
       },
     },
     lineup_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'lineups',

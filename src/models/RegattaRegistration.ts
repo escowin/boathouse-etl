@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 // Define the attributes interface
 interface RegattaRegistrationAttributes {
-  registration_id: number;
+  registration_id: string; // Changed from number to string (UUID)
   regatta_id: number;
   athlete_id: string;
   team_id: number;
@@ -27,7 +27,7 @@ interface RegattaRegistrationCreationAttributes extends Optional<RegattaRegistra
 > {}
 
 class RegattaRegistration extends Model<RegattaRegistrationAttributes, RegattaRegistrationCreationAttributes> implements RegattaRegistrationAttributes {
-  public registration_id!: number;
+  public registration_id!: string; // Changed from number to string (UUID)
   public regatta_id!: number;
   public athlete_id!: string;
   public team_id!: number;
@@ -51,9 +51,10 @@ class RegattaRegistration extends Model<RegattaRegistrationAttributes, RegattaRe
 RegattaRegistration.init(
   {
     registration_id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false,
     },
     regatta_id: {
       type: DataTypes.INTEGER,
