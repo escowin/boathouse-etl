@@ -36,9 +36,16 @@ router.get('/', async (_req: Request, res: Response) => {
       raw: true
     });
 
+    // Calculate age for each athlete and add to response
+    const currentYear = new Date().getFullYear();
+    const athletesWithAge = athletes.map(athlete => ({
+      ...athlete,
+      age: athlete.birth_year ? currentYear - athlete.birth_year : undefined
+    }));
+
     return res.json({
       success: true,
-      data: athletes,
+      data: athletesWithAge,
       message: 'Athlete data for IndexedDB retrieved successfully'
     });
 
@@ -98,9 +105,16 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
+    // Calculate age and add to response
+    const currentYear = new Date().getFullYear();
+    const athleteWithAge = {
+      ...athlete,
+      age: athlete.birth_year ? currentYear - athlete.birth_year : undefined
+    };
+
     return res.json({
       success: true,
-      data: athlete,
+      data: athleteWithAge,
       message: 'Complete athlete profile retrieved successfully'
     });
 
