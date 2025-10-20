@@ -14,7 +14,7 @@ router.get('/', authMiddleware.verifyToken, async (_req: Request, res: Response)
       include: [
         {
           model: Gauntlet,
-          as: 'Gauntlet',
+          as: 'gauntlet',
           attributes: ['gauntlet_id', 'name', 'boat_type', 'status']
         }
       ],
@@ -63,7 +63,7 @@ router.get('/:id/positions', authMiddleware.verifyToken, async (req: Request, re
       include: [
         {
           model: Athlete,
-          as: 'Athlete',
+          as: 'athlete',
           attributes: ['athlete_id', 'name', 'email']
         }
       ],

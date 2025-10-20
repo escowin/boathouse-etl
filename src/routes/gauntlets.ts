@@ -36,7 +36,7 @@ router.get('/', authMiddleware.verifyToken, async (req: Request, res: Response) 
       include: [
         {
           model: Athlete,
-          as: 'Creator',
+          as: 'creator',
           attributes: ['athlete_id', 'name', 'email']
         }
       ],
@@ -73,20 +73,20 @@ router.get('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       include: [
         {
           model: Athlete,
-          as: 'Creator',
+          as: 'creator',
           attributes: ['athlete_id', 'name', 'email']
         },
         {
           model: Ladder,
-          as: 'Ladder',
+          as: 'ladder',
           include: [
             {
               model: LadderPosition,
-              as: 'Positions',
+              as: 'positions',
               include: [
                 {
                   model: Athlete,
-                  as: 'Athlete',
+                  as: 'athlete',
                   attributes: ['athlete_id', 'name']
                 }
               ],
@@ -189,12 +189,12 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       include: [
         {
           model: Athlete,
-          as: 'Creator',
+          as: 'creator',
           attributes: ['athlete_id', 'name', 'email']
         },
         {
           model: Ladder,
-          as: 'Ladder'
+          as: 'ladder'
         }
       ]
     });
@@ -269,12 +269,12 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       include: [
         {
           model: Athlete,
-          as: 'Creator',
+          as: 'creator',
           attributes: ['athlete_id', 'name', 'email']
         },
         {
           model: Ladder,
-          as: 'Ladder'
+          as: 'ladder'
         }
       ]
     });
@@ -323,10 +323,10 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
         include: [{ model: GauntletLineup, as: 'GauntletLineup', where: { gauntlet_id: id } }]
       }),
       LadderPosition.count({ 
-        include: [{ model: Ladder, as: 'Ladder', where: { gauntlet_id: id } }]
+        include: [{ model: Ladder, as: 'ladder', where: { gauntlet_id: id } }]
       }),
       LadderProgression.count({ 
-        include: [{ model: Ladder, as: 'Ladder', where: { gauntlet_id: id } }]
+        include: [{ model: Ladder, as: 'ladder', where: { gauntlet_id: id } }]
       })
     ]);
 

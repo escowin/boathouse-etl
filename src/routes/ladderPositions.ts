@@ -120,12 +120,12 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       include: [
         {
           model: Athlete,
-          as: 'Athlete',
+          as: 'athlete',
           attributes: ['athlete_id', 'name', 'email']
         },
         {
           model: Ladder,
-          as: 'Ladder'
+          as: 'ladder'
         }
       ]
     });
@@ -197,12 +197,12 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
       include: [
         {
           model: Athlete,
-          as: 'Athlete',
+          as: 'athlete',
           attributes: ['athlete_id', 'name', 'email']
         },
         {
           model: Ladder,
-          as: 'Ladder'
+          as: 'ladder'
         }
       ]
     });
