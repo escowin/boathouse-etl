@@ -13,6 +13,7 @@ import { gauntletMatchRouter } from './routes/gauntletMatches';
 import { ladderRouter } from './routes/ladders';
 import { ladderPositionRouter } from './routes/ladderPositions';
 import { boatsRouter } from './routes/boats';
+import lineupRouter from './routes/lineups';
 
 // Load environment variables
 dotenv.config();
@@ -76,6 +77,7 @@ app.use('/api/gauntlet-matches', gauntletMatchRouter);
 app.use('/api/ladders', ladderRouter);
 app.use('/api/ladder-positions', ladderPositionRouter);
 app.use('/api', boatsRouter);
+app.use('/api/lineups', lineupRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -94,6 +96,7 @@ app.get('/', (_req, res) => {
         ladders: '/api/ladders',
         ladderPositions: '/api/ladder-positions',
         boats: '/api/data/boats',
+        lineups: '/api/lineups',
         health: '/health'
       }
     },
@@ -144,6 +147,7 @@ app.listen(PORT, () => {
   console.log(`📈 Ladders: http://localhost:${PORT}/api/ladders`);
   console.log(`🎯 Ladder positions: http://localhost:${PORT}/api/ladder-positions`);
   console.log(`🚣 Boats: http://localhost:${PORT}/api/data/boats`);
+  console.log(`👥 Lineups: http://localhost:${PORT}/api/lineups`);
   console.log(`🌐 CORS origin: ${process.env['CORS_ORIGIN'] || '*'}`);
 });
 
