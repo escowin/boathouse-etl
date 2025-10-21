@@ -320,7 +320,7 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
       GauntletMatch.count({ where: { gauntlet_id: id } }),
       GauntletLineup.count({ where: { gauntlet_id: id } }),
       GauntletSeatAssignment.count({ 
-        include: [{ model: GauntletLineup, as: 'GauntletLineup', where: { gauntlet_id: id } }]
+        include: [{ model: GauntletLineup, as: 'lineup', where: { gauntlet_id: id } }]
       }),
       LadderPosition.count({ 
         include: [{ model: Ladder, as: 'ladder', where: { gauntlet_id: id } }]
