@@ -14,16 +14,16 @@ export interface AthleteWithUsraData {
   active: boolean;
   gender?: 'M' | 'F';
   age?: number | undefined;
-  birthYear?: number;
+  birthYear?: number | string;
   portStarboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
   sweepScull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
   usraAgeCategory?: string;
-  weightKg?: number;
-  heightCm?: number; // Height in cm - athletes can update this in their profiles
+  weightKg?: number | string;
+  heightCm?: number | string; // Height in cm - athletes can update this in their profiles
   email?: string;
   phone?: string;
   bowInDark?: boolean;
-  experience?: number;
+  experience?: number | string;
   emergencyContact?: string;
   emergencyContactPhone?: string;
 }
@@ -238,10 +238,12 @@ export class AthleteService {
       const dbUpdateData: any = {};
       
       if (updateData.heightCm !== undefined) {
-        dbUpdateData.height_cm = updateData.heightCm;
+        // Convert empty string to null for numeric fields
+        dbUpdateData.height_cm = updateData.heightCm === '' ? null : updateData.heightCm;
       }
       if (updateData.weightKg !== undefined) {
-        dbUpdateData.weight_kg = updateData.weightKg;
+        // Convert empty string to null for numeric fields
+        dbUpdateData.weight_kg = updateData.weightKg === '' ? null : updateData.weightKg;
       }
       if (updateData.email !== undefined) {
         dbUpdateData.email = updateData.email;
@@ -265,7 +267,12 @@ export class AthleteService {
         dbUpdateData.bow_in_dark = updateData.bowInDark;
       }
       if (updateData.experience !== undefined) {
-        dbUpdateData.experience_years = updateData.experience;
+        // Convert empty string to null for numeric fields
+        dbUpdateData.experience_years = updateData.experience === '' ? null : updateData.experience;
+      }
+      if (updateData.birthYear !== undefined) {
+        // Convert empty string to null for numeric fields
+        dbUpdateData.birth_year = updateData.birthYear === '' ? null : updateData.birthYear;
       }
 
       // Update the athlete
