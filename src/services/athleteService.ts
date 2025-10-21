@@ -7,36 +7,25 @@ export interface AthleteFilters {
 }
 
 export interface AthleteWithUsraData {
-  athlete_id: string;
+  // Essential fields for localStorage
+  id: string;
   name: string;
+  type: 'Cox' | 'Rower' | 'Rower & Coxswain';
+  active: boolean;
+  gender?: 'M' | 'F';
+  age?: number | undefined;
+  birthYear?: number;
+  portStarboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
+  sweepScull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
+  usraAgeCategory?: string;
+  weight?: number;
+  height?: number; // Height in cm - athletes can update this in their profiles
   email?: string;
   phone?: string;
-  type: 'Cox' | 'Rower' | 'Rower & Coxswain';
-  gender?: 'M' | 'F';
-  birth_year?: number;
-  age?: number;
-  sweep_scull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
-  port_starboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
-  bow_in_dark?: boolean;
-  weight_kg?: number;
-  height_cm?: number;
-  experience_years?: number;
-  usra_age_category_id?: number;
-  usra_category?: string;
-  us_rowing_number?: string;
-  emergency_contact?: string;
-  emergency_contact_phone?: string;
-  active: boolean;
-  competitive_status: 'active' | 'inactive' | 'retired' | 'banned';
-  retirement_reason?: 'deceased' | 'transferred' | 'graduated' | 'personal' | 'unknown';
-  retirement_date?: Date;
-  ban_reason?: 'misconduct' | 'safety_violation' | 'harassment' | 'other';
-  ban_date?: Date;
-  ban_notes?: string;
-  created_at: Date;
-  updated_at: Date;
-  etl_source: string;
-  etl_last_sync: Date;
+  bowInDark?: boolean;
+  experience?: number;
+  emergencyContact?: string;
+  emergencyContactPhone?: string;
 }
 
 export class AthleteService {
@@ -99,15 +88,32 @@ export class AthleteService {
       });
 
       // Transform the data to include calculated age and USRA category
+      // Also map database field names to frontend field names
       const currentYear = new Date().getFullYear();
       
       return athletes.map(athlete => {
         const athleteData = athlete.toJSON() as any;
         
         return {
-          ...athleteData,
+          // Essential fields for localStorage (mapped from database)
+          id: athleteData.athlete_id, // Map athlete_id to id for frontend compatibility
+          name: athleteData.name,
+          type: athleteData.type,
+          active: athleteData.active,
+          gender: athleteData.gender,
           age: athleteData.birth_year ? currentYear - athleteData.birth_year : undefined,
-          usra_category: athleteData.usra_age_category?.category || undefined
+          birthYear: athleteData.birth_year,
+          portStarboard: athleteData.port_starboard,
+          sweepScull: athleteData.sweep_scull,
+          usraAgeCategory: athleteData.usra_age_category?.category || undefined,
+          weight: athleteData.weight_kg,
+          height: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          email: athleteData.email,
+          phone: athleteData.phone,
+          bowInDark: athleteData.bow_in_dark,
+          experience: athleteData.experience_years,
+          emergencyContact: athleteData.emergency_contact,
+          emergencyContactPhone: athleteData.emergency_contact_phone
         };
       });
 
@@ -169,11 +175,27 @@ export class AthleteService {
       const athleteData = athlete.toJSON() as any;
       const currentYear = new Date().getFullYear();
 
-      return {
-        ...athleteData,
-        age: athleteData.birth_year ? currentYear - athleteData.birth_year : undefined,
-        usra_category: athleteData.usra_age_category?.category || undefined
-      };
+        return {
+          // Essential fields for localStorage (mapped from database)
+          id: athleteData.athlete_id, // Map athlete_id to id for frontend compatibility
+          name: athleteData.name,
+          type: athleteData.type,
+          active: athleteData.active,
+          gender: athleteData.gender,
+          age: athleteData.birth_year ? currentYear - athleteData.birth_year : undefined,
+          birthYear: athleteData.birth_year,
+          portStarboard: athleteData.port_starboard,
+          sweepScull: athleteData.sweep_scull,
+          usraAgeCategory: athleteData.usra_age_category?.category || undefined,
+          weight: athleteData.weight_kg,
+          height: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          email: athleteData.email,
+          phone: athleteData.phone,
+          bowInDark: athleteData.bow_in_dark,
+          experience: athleteData.experience_years,
+          emergencyContact: athleteData.emergency_contact,
+          emergencyContactPhone: athleteData.emergency_contact_phone
+        };
 
     } catch (error) {
       console.error('Error fetching athlete with USRA category:', error);
