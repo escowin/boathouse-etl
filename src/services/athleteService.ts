@@ -72,16 +72,16 @@ export class AthleteService {
           'emergency_contact',
           'emergency_contact_phone',
           'active',
-          'competitive_status',
-          'retirement_reason',
-          'retirement_date',
-          'ban_reason',
-          'ban_date',
-          'ban_notes',
+          // 'competitive_status',
+          // 'retirement_reason',
+          // 'retirement_date',
+          // 'ban_reason',
+          // 'ban_date',
+          // 'ban_notes',
           'created_at',
           'updated_at',
-          'etl_source',
-          'etl_last_sync'
+          // 'etl_source',
+          // 'etl_last_sync'
         ],
         order: [['name', 'ASC']],
         raw: false // Keep as instances to access included data
@@ -220,6 +220,64 @@ export class AthleteService {
    */
   async getCompleteAthleteProfile(athleteId: string): Promise<AthleteWithUsraData | null> {
     return this.getAthleteWithUsraCategory(athleteId);
+  }
+
+  /**
+   * Update athlete profile data
+   * Allows athletes to update their own profile information
+   */
+  async updateAthleteProfile(athleteId: string, updateData: Partial<AthleteWithUsraData>): Promise<AthleteWithUsraData | null> {
+    try {
+      // Find the athlete first
+      const athlete = await Athlete.findByPk(athleteId);
+      if (!athlete) {
+        return null;
+      }
+
+      // Map frontend field names to database field names
+      const dbUpdateData: any = {};
+      
+      if (updateData.height !== undefined) {
+        dbUpdateData.height_cm = updateData.height;
+      }
+      if (updateData.weight !== undefined) {
+        dbUpdateData.weight_kg = updateData.weight;
+      }
+      if (updateData.email !== undefined) {
+        dbUpdateData.email = updateData.email;
+      }
+      if (updateData.phone !== undefined) {
+        dbUpdateData.phone = updateData.phone;
+      }
+      if (updateData.emergencyContact !== undefined) {
+        dbUpdateData.emergency_contact = updateData.emergencyContact;
+      }
+      if (updateData.emergencyContactPhone !== undefined) {
+        dbUpdateData.emergency_contact_phone = updateData.emergencyContactPhone;
+      }
+      if (updateData.portStarboard !== undefined) {
+        dbUpdateData.port_starboard = updateData.portStarboard;
+      }
+      if (updateData.sweepScull !== undefined) {
+        dbUpdateData.sweep_scull = updateData.sweepScull;
+      }
+      if (updateData.bowInDark !== undefined) {
+        dbUpdateData.bow_in_dark = updateData.bowInDark;
+      }
+      if (updateData.experience !== undefined) {
+        dbUpdateData.experience_years = updateData.experience;
+      }
+
+      // Update the athlete
+      await athlete.update(dbUpdateData);
+
+      // Return the updated athlete profile
+      return this.getAthleteWithUsraCategory(athleteId);
+
+    } catch (error) {
+      console.error('Error updating athlete profile:', error);
+      throw new Error('Failed to update athlete profile');
+    }
   }
 }
 
