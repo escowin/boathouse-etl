@@ -18,8 +18,8 @@ export interface AthleteWithUsraData {
   portStarboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
   sweepScull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
   usraAgeCategory?: string;
-  weight?: number;
-  height?: number; // Height in cm - athletes can update this in their profiles
+  weightKg?: number;
+  heightCm?: number; // Height in cm - athletes can update this in their profiles
   email?: string;
   phone?: string;
   bowInDark?: boolean;
@@ -106,8 +106,8 @@ export class AthleteService {
           portStarboard: athleteData.port_starboard,
           sweepScull: athleteData.sweep_scull,
           usraAgeCategory: athleteData.usra_age_category?.category || undefined,
-          weight: athleteData.weight_kg,
-          height: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          weightKg: athleteData.weight_kg,
+          heightCm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
           email: athleteData.email,
           phone: athleteData.phone,
           bowInDark: athleteData.bow_in_dark,
@@ -187,8 +187,8 @@ export class AthleteService {
           portStarboard: athleteData.port_starboard,
           sweepScull: athleteData.sweep_scull,
           usraAgeCategory: athleteData.usra_age_category?.category || undefined,
-          weight: athleteData.weight_kg,
-          height: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          weightKg: athleteData.weight_kg,
+          heightCm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
           email: athleteData.email,
           phone: athleteData.phone,
           bowInDark: athleteData.bow_in_dark,
@@ -237,11 +237,11 @@ export class AthleteService {
       // Map frontend field names to database field names
       const dbUpdateData: any = {};
       
-      if (updateData.height !== undefined) {
-        dbUpdateData.height_cm = updateData.height;
+      if (updateData.heightCm !== undefined) {
+        dbUpdateData.height_cm = updateData.heightCm;
       }
-      if (updateData.weight !== undefined) {
-        dbUpdateData.weight_kg = updateData.weight;
+      if (updateData.weightKg !== undefined) {
+        dbUpdateData.weight_kg = updateData.weightKg;
       }
       if (updateData.email !== undefined) {
         dbUpdateData.email = updateData.email;
