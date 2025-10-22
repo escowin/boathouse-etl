@@ -402,4 +402,517 @@ router.get('/:id/matches', authMiddleware.verifyToken, async (req: Request, res:
   }
 });
 
+/**
+ * POST /api/gauntlets/:gauntletId/lineups
+ * Create a new gauntlet lineup
+ */
+router.post('/:gauntletId/lineups', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    const { boat_id, match_id } = req.body;
+
+    // Validate required fields
+    if (!boat_id) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Missing required field: boat_id',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    const lineup = await GauntletLineup.create({
+      gauntlet_id: gauntletId!,
+      boat_id: boat_id as string,
+      match_id: match_id || null
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: lineup,
+      message: 'Gauntlet lineup created successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error creating gauntlet lineup:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to create gauntlet lineup',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * PUT /api/gauntlets/:gauntletId/lineups/:lineupId
+ * Update a gauntlet lineup
+ */
+router.put('/:gauntletId/lineups/:lineupId', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId, lineupId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    // Find the lineup
+    const lineup = await GauntletLineup.findOne({
+      where: {
+        gauntlet_lineup_id: lineupId,
+        gauntlet_id: gauntletId
+      }
+    });
+
+    if (!lineup) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet lineup not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    const { boat_id, match_id } = req.body;
+
+    // Update the lineup
+    await lineup.update({
+      boat_id: boat_id || lineup.boat_id,
+      match_id: match_id !== undefined ? match_id : lineup.match_id
+    });
+
+    return res.json({
+      success: true,
+      data: lineup,
+      message: 'Gauntlet lineup updated successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error updating gauntlet lineup:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to update gauntlet lineup',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * DELETE /api/gauntlets/:gauntletId/lineups/:lineupId
+ * Delete a gauntlet lineup
+ */
+router.delete('/:gauntletId/lineups/:lineupId', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId, lineupId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    // Find the lineup
+    const lineup = await GauntletLineup.findOne({
+      where: {
+        gauntlet_lineup_id: lineupId,
+        gauntlet_id: gauntletId
+      }
+    });
+
+    if (!lineup) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet lineup not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    // Delete the lineup (cascade will handle seat assignments)
+    await lineup.destroy();
+
+    return res.json({
+      success: true,
+      data: null,
+      message: 'Gauntlet lineup deleted successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error deleting gauntlet lineup:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to delete gauntlet lineup',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * POST /api/gauntlets/:gauntletId/lineups/:lineupId/seat-assignments
+ * Create a new gauntlet seat assignment
+ */
+router.post('/:gauntletId/lineups/:lineupId/seat-assignments', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId, lineupId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    // Verify lineup exists and belongs to this gauntlet
+    const lineup = await GauntletLineup.findOne({
+      where: {
+        gauntlet_lineup_id: lineupId,
+        gauntlet_id: gauntletId
+      }
+    });
+
+    if (!lineup) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet lineup not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    const { athlete_id, seat_number, side, notes } = req.body;
+
+    // Validate required fields
+    if (!athlete_id || !seat_number || !side) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Missing required fields: athlete_id, seat_number, side',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate side enum
+    if (!['port', 'starboard', 'scull'].includes(side)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Invalid side. Must be one of: port, starboard, scull',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    const seatAssignment = await GauntletSeatAssignment.create({
+      gauntlet_lineup_id: lineupId!,
+      athlete_id: athlete_id as string,
+      seat_number: seat_number as number,
+      side: side as 'port' | 'starboard' | 'scull',
+      notes: notes || null
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: seatAssignment,
+      message: 'Gauntlet seat assignment created successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error creating gauntlet seat assignment:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to create gauntlet seat assignment',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * PUT /api/gauntlets/:gauntletId/lineups/:lineupId/seat-assignments/:assignmentId
+ * Update a gauntlet seat assignment
+ */
+router.put('/:gauntletId/lineups/:lineupId/seat-assignments/:assignmentId', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId, lineupId, assignmentId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    // Find the seat assignment
+    const seatAssignment = await GauntletSeatAssignment.findOne({
+      where: {
+        gauntlet_seat_assignment_id: assignmentId,
+        gauntlet_lineup_id: lineupId
+      },
+      include: [{
+        model: GauntletLineup,
+        as: 'lineup',
+        where: { gauntlet_id: gauntletId }
+      }]
+    });
+
+    if (!seatAssignment) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet seat assignment not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    const { athlete_id, seat_number, side, notes } = req.body;
+
+    // Validate side enum if provided
+    if (side && !['port', 'starboard', 'scull'].includes(side)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Invalid side. Must be one of: port, starboard, scull',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Update the seat assignment
+    await seatAssignment.update({
+      athlete_id: athlete_id || seatAssignment.athlete_id,
+      seat_number: seat_number || seatAssignment.seat_number,
+      side: side || seatAssignment.side,
+      notes: notes !== undefined ? notes : seatAssignment.notes
+    });
+
+    return res.json({
+      success: true,
+      data: seatAssignment,
+      message: 'Gauntlet seat assignment updated successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error updating gauntlet seat assignment:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to update gauntlet seat assignment',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * DELETE /api/gauntlets/:gauntletId/lineups/:lineupId/seat-assignments/:assignmentId
+ * Delete a gauntlet seat assignment
+ */
+router.delete('/:gauntletId/lineups/:lineupId/seat-assignments/:assignmentId', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { gauntletId, lineupId, assignmentId } = req.params;
+    const athleteId = req.user?.athlete_id;
+
+    if (!athleteId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Verify gauntlet exists and user has access
+    const gauntlet = await Gauntlet.findByPk(gauntletId);
+    if (!gauntlet) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    if (gauntlet.created_by !== athleteId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: 'Access denied',
+        error: 'FORBIDDEN'
+      });
+    }
+
+    // Find the seat assignment
+    const seatAssignment = await GauntletSeatAssignment.findOne({
+      where: {
+        gauntlet_seat_assignment_id: assignmentId,
+        gauntlet_lineup_id: lineupId
+      },
+      include: [{
+        model: GauntletLineup,
+        as: 'lineup',
+        where: { gauntlet_id: gauntletId }
+      }]
+    });
+
+    if (!seatAssignment) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Gauntlet seat assignment not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    // Delete the seat assignment
+    await seatAssignment.destroy();
+
+    return res.json({
+      success: true,
+      data: null,
+      message: 'Gauntlet seat assignment deleted successfully',
+      error: null
+    });
+
+  } catch (error: any) {
+    console.error('Error deleting gauntlet seat assignment:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to delete gauntlet seat assignment',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
 export { router as gauntletRouter };
