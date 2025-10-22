@@ -7,7 +7,7 @@ interface GauntletSeatAssignmentAttributes {
   gauntlet_lineup_id: string;
   athlete_id: string;
   seat_number: number;
-  side: 'port' | 'starboard';
+  side: 'port' | 'starboard' | 'scull';
   notes?: string;
   created_at: Date;
   updated_at: Date;
@@ -23,7 +23,7 @@ class GauntletSeatAssignment extends Model<GauntletSeatAssignmentAttributes, Gau
   public gauntlet_lineup_id!: string;
   public athlete_id!: string;
   public seat_number!: number;
-  public side!: 'port' | 'starboard';
+  public side!: 'port' | 'starboard' | 'scull';
   public notes?: string;
   public created_at!: Date;
   public updated_at!: Date;
@@ -68,7 +68,7 @@ GauntletSeatAssignment.init(
       }
     },
     side: {
-      type: DataTypes.ENUM('port', 'starboard'),
+      type: DataTypes.ENUM('port', 'starboard', 'scull'),
       allowNull: false
     },
     notes: {
