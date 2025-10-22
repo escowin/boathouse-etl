@@ -10,6 +10,7 @@ import {
   Athlete
 } from '../models';
 import { authMiddleware } from '../auth/middleware';
+import sequelize from '../config/database';
 
 const router = Router();
 
@@ -214,6 +215,212 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       success: false,
       data: null,
       message: 'Failed to create gauntlet',
+      error: error.message || 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
+ * POST /api/gauntlets/comprehensive
+ * Create a gauntlet with all associated entities in one atomic operation
+ */
+router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      description,
+      boat_type,
+      status = 'setup',
+      userBoat,
+      challengers = []
+    } = req.body;
+
+    // Get the authenticated user's ID from the token
+    const created_by = req.user?.athlete_id;
+    
+    if (!created_by) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    // Validate required fields
+    if (!name || !boat_type || !userBoat) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Missing required fields: name, boat_type, userBoat',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate boat type
+    const validBoatTypes = ['1x', '2x', '2-', '4x', '4+', '8+'];
+    if (!validBoatTypes.includes(boat_type)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: `Invalid boat_type. Must be one of: ${validBoatTypes.join(', ')}`,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate status
+    const validStatuses = ['setup', 'active', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Start a transaction to ensure atomicity
+    const transaction = await sequelize.transaction();
+
+    try {
+      // 1. Create gauntlet
+      const gauntlet = await Gauntlet.create({
+        name,
+        description,
+        boat_type,
+        created_by,
+        status
+      }, { transaction });
+
+      const gauntletId = gauntlet.getDataValue('gauntlet_id');
+
+      // 2. Create ladder
+      const ladder = await Ladder.create({
+        gauntlet_id: gauntletId
+      }, { transaction });
+
+      // 3. Create user boat lineup
+      if (!userBoat.selectedBoat?.id) {
+        throw new Error('User boat must have a selected boat');
+      }
+
+      const userLineup = await GauntletLineup.create({
+        gauntlet_id: gauntletId,
+        boat_id: userBoat.selectedBoat.id,
+        match_id: null
+      }, { transaction });
+
+      // 4. Create seat assignments for user boat
+      if (userBoat.selectedRowers && userBoat.selectedRowers.length > 0) {
+        for (let index = 0; index < userBoat.selectedRowers.length; index++) {
+          const rower = userBoat.selectedRowers[index];
+          const seatNumber = index + 1;
+          const isScullingBoat = ['1x', '2x', '4x'].includes(boat_type);
+          const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
+          
+          await GauntletSeatAssignment.create({
+            gauntlet_lineup_id: userLineup.gauntlet_lineup_id,
+            athlete_id: rower.id,
+            seat_number: seatNumber,
+            side,
+            notes: null
+          }, { transaction });
+        }
+      }
+
+      // 5. Create challenger lineups and seat assignments
+      for (const challenger of challengers) {
+        if (challenger.selectedBoat && challenger.selectedRowers && challenger.selectedRowers.length > 0) {
+          const challengerLineup = await GauntletLineup.create({
+            gauntlet_id: gauntletId,
+            boat_id: challenger.selectedBoat.id,
+            match_id: null
+          }, { transaction });
+
+          for (let index = 0; index < challenger.selectedRowers.length; index++) {
+            const rower = challenger.selectedRowers[index];
+            const seatNumber = index + 1;
+            const isScullingBoat = ['1x', '2x', '4x'].includes(boat_type);
+            const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
+            
+            await GauntletSeatAssignment.create({
+              gauntlet_lineup_id: challengerLineup.gauntlet_lineup_id,
+              athlete_id: rower.id,
+              seat_number: seatNumber,
+              side,
+              notes: null
+            }, { transaction });
+          }
+        }
+      }
+
+      // Commit the transaction
+      await transaction.commit();
+
+      // Fetch the complete gauntlet with all associations
+      const completeGauntlet = await Gauntlet.findByPk(gauntletId, {
+        include: [
+          {
+            model: Athlete,
+            as: 'creator',
+            attributes: ['athlete_id', 'name', 'email']
+          },
+          {
+            model: Ladder,
+            as: 'ladder',
+            include: [
+              {
+                model: LadderPosition,
+                as: 'positions',
+                include: [
+                  {
+                    model: Athlete,
+                    as: 'athlete',
+                    attributes: ['athlete_id', 'name', 'email']
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            model: GauntletLineup,
+            as: 'lineups',
+            include: [
+              {
+                model: GauntletSeatAssignment,
+                as: 'seatAssignments',
+                include: [
+                  {
+                    model: Athlete,
+                    as: 'athlete',
+                    attributes: ['athlete_id', 'name', 'email']
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: completeGauntlet,
+        message: 'Comprehensive gauntlet created successfully',
+        error: null
+      });
+
+    } catch (error) {
+      // Rollback the transaction on error
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error: any) {
+    console.error('Error creating comprehensive gauntlet:', error);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      message: 'Failed to create comprehensive gauntlet',
       error: error.message || 'INTERNAL_ERROR'
     });
   }
