@@ -306,8 +306,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
 
       const userLineup = await GauntletLineup.create({
         gauntlet_id: gauntletId,
-        boat_id: userBoat.selectedBoat.id,
-        match_id: undefined
+        boat_id: userBoat.selectedBoat.id
       }, { transaction });
 
       // 4. Create seat assignments for user boat
@@ -322,8 +321,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
             gauntlet_lineup_id: userLineup.gauntlet_lineup_id,
             athlete_id: rower.id,
             seat_number: seatNumber,
-            side,
-            notes: undefined
+            side
           }, { transaction });
         }
       }
@@ -333,8 +331,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         if (challenger.selectedBoat && challenger.selectedRowers && challenger.selectedRowers.length > 0) {
           const challengerLineup = await GauntletLineup.create({
             gauntlet_id: gauntletId,
-            boat_id: challenger.selectedBoat.id,
-            match_id: undefined
+            boat_id: challenger.selectedBoat.id
           }, { transaction });
 
           for (let index = 0; index < challenger.selectedRowers.length; index++) {
@@ -347,8 +344,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
               gauntlet_lineup_id: challengerLineup.gauntlet_lineup_id,
               athlete_id: rower.id,
               seat_number: seatNumber,
-              side,
-              notes: undefined
+              side
             }, { transaction });
           }
         }
