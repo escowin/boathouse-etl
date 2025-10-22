@@ -26,8 +26,13 @@ const globalLimiter = rateLimit({
 
 // Middleware
 app.use(globalLimiter);
+// Parse CORS origins from environment variable
+const corsOrigins = process.env['CORS_ORIGIN'] 
+  ? process.env['CORS_ORIGIN'].split(',').map(origin => origin.trim())
+  : ['*'];
+
 app.use(cors({
-  origin: process.env['CORS_ORIGIN'] || '*',
+  origin: corsOrigins,
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
