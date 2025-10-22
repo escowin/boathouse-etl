@@ -134,16 +134,27 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       name,
       description,
       boat_type,
-      created_by,
       status = 'setup'
     } = req.body;
 
+    // Get the authenticated user's ID from the token
+    const created_by = req.user?.athlete_id;
+    
+    if (!created_by) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        message: 'Athlete ID required',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
     // Validate required fields
-    if (!name || !boat_type || !created_by) {
+    if (!name || !boat_type) {
       return res.status(400).json({
         success: false,
         data: null,
-        message: 'Missing required fields: name, boat_type, created_by',
+        message: 'Missing required fields: name, boat_type',
         error: 'VALIDATION_ERROR'
       });
     }
