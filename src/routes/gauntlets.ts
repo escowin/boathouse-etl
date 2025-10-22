@@ -281,6 +281,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
 
     // Start a transaction to ensure atomicity
     const transaction = await sequelize.transaction();
+    let transactionCommitted = false;
 
     try {
       // 1. Create gauntlet
@@ -352,8 +353,9 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
 
       // Commit the transaction
       await transaction.commit();
+      transactionCommitted = true;
 
-      // Fetch the complete gauntlet with all associations
+      // Fetch the complete gauntlet with all associations (outside transaction)
       const completeGauntlet = await Gauntlet.findByPk(gauntletId, {
         include: [
           {
@@ -380,11 +382,11 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
           },
           {
             model: GauntletLineup,
-            as: 'lineups',
+            as: 'gauntlet_lineups',
             include: [
               {
                 model: GauntletSeatAssignment,
-                as: 'seatAssignments',
+                as: 'gauntlet_seat_assignments',
                 include: [
                   {
                     model: Athlete,
@@ -406,8 +408,10 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       });
 
     } catch (error) {
-      // Rollback the transaction on error
-      await transaction.rollback();
+      // Only rollback if transaction hasn't been committed yet
+      if (!transactionCommitted) {
+        await transaction.rollback();
+      }
       throw error;
     }
 
