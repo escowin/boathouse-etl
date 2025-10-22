@@ -318,7 +318,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
           const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
           
           await GauntletSeatAssignment.create({
-            gauntlet_lineup_id: userLineup.gauntlet_lineup_id,
+            gauntlet_lineup_id: userLineup.getDataValue('gauntlet_lineup_id'),
             athlete_id: rower.id,
             seat_number: seatNumber,
             side
@@ -341,7 +341,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
             const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
             
             await GauntletSeatAssignment.create({
-              gauntlet_lineup_id: challengerLineup.gauntlet_lineup_id,
+              gauntlet_lineup_id: challengerLineup.getDataValue('gauntlet_lineup_id'),
               athlete_id: rower.id,
               seat_number: seatNumber,
               side
