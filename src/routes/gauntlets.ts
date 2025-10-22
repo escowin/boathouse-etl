@@ -179,22 +179,13 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       status
     });
 
-    // Create associated ladder
-    await Ladder.create({
-      gauntlet_id: gauntlet.getDataValue('gauntlet_id')
-    });
-
-    // Fetch the created gauntlet with associations
+    // Fetch the created gauntlet with associations (no ladder auto-creation)
     const createdGauntlet = await Gauntlet.findByPk(gauntlet.getDataValue('gauntlet_id'), {
       include: [
         {
           model: Athlete,
           as: 'creator',
           attributes: ['athlete_id', 'name', 'email']
-        },
-        {
-          model: Ladder,
-          as: 'ladder'
         }
       ]
     });
