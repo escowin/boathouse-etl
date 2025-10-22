@@ -422,6 +422,13 @@ router.post('/:gauntletId/lineups', authMiddleware.verifyToken, async (req: Requ
       });
     }
 
+    console.log('🔍 Lineup creation auth check:', {
+      gauntletId,
+      gauntlet_created_by: gauntlet.created_by,
+      auth_athlete_id: athleteId,
+      match: gauntlet.created_by === athleteId
+    });
+
     if (gauntlet.created_by !== athleteId) {
       return res.status(403).json({
         success: false,
@@ -652,6 +659,13 @@ router.post('/:gauntletId/lineups/:lineupId/seat-assignments', authMiddleware.ve
         error: 'NOT_FOUND'
       });
     }
+
+    console.log('🔍 Seat assignment creation auth check:', {
+      gauntletId,
+      gauntlet_created_by: gauntlet.created_by,
+      auth_athlete_id: athleteId,
+      match: gauntlet.created_by === athleteId
+    });
 
     if (gauntlet.created_by !== athleteId) {
       return res.status(403).json({

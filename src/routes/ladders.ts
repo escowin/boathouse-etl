@@ -128,6 +128,13 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       });
     }
 
+    console.log('🔍 Ladder creation auth check:', {
+      gauntlet_id,
+      gauntlet_created_by: gauntlet.created_by,
+      auth_athlete_id: athleteId,
+      match: gauntlet.created_by === athleteId
+    });
+
     if (gauntlet.created_by !== athleteId) {
       return res.status(403).json({
         success: false,
