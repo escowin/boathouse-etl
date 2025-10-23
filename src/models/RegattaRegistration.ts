@@ -52,7 +52,6 @@ RegattaRegistration.init(
   {
     registration_id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },

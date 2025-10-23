@@ -498,9 +498,39 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         ]
       });
 
+      // Transform the response to ensure correct field names
+      const transformedGauntlet = JSON.parse(JSON.stringify(completeGauntlet, (key, value) => {
+        // Transform gauntlet_seat_assign to gauntlet_seat_assignment_id
+        if (key === 'gauntlet_seat_assign') {
+          return { gauntlet_seat_assignment_id: value };
+        }
+        return value;
+      }));
+
+      // Flatten the transformed object to fix the nested structure
+      const flattenTransformedGauntlet = JSON.parse(JSON.stringify(transformedGauntlet, (key, value) => {
+        if (key === 'gauntlet_seat_assignments' && Array.isArray(value)) {
+          return value.map(assignment => {
+            if (assignment.gauntlet_seat_assignment_id) {
+              return assignment;
+            }
+            // If it has gauntlet_seat_assign, transform it
+            if (assignment.gauntlet_seat_assign) {
+              const { gauntlet_seat_assign, ...rest } = assignment;
+              return {
+                ...rest,
+                gauntlet_seat_assignment_id: gauntlet_seat_assign
+              };
+            }
+            return assignment;
+          });
+        }
+        return value;
+      }));
+
       return res.status(201).json({
         success: true,
-        data: completeGauntlet,
+        data: flattenTransformedGauntlet,
         message: 'Comprehensive gauntlet created successfully',
         error: null
       });

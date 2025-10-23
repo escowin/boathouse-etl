@@ -31,13 +31,27 @@ class GauntletSeatAssignment extends Model<GauntletSeatAssignmentAttributes, Gau
   // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  // Custom toJSON method to ensure correct field names
+  public override toJSON() {
+    const values = Object.assign({}, this.get());
+    return {
+      gauntlet_seat_assignment_id: values.gauntlet_seat_assignment_id,
+      gauntlet_lineup_id: values.gauntlet_lineup_id,
+      athlete_id: values.athlete_id,
+      seat_number: values.seat_number,
+      side: values.side,
+      notes: values.notes,
+      created_at: values.created_at,
+      updated_at: values.updated_at
+    };
+  }
 }
 
 GauntletSeatAssignment.init(
   {
     gauntlet_seat_assignment_id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false
     },

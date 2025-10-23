@@ -49,7 +49,6 @@ Boat.init(
   {
     boat_id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
