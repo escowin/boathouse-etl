@@ -296,11 +296,69 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       const gauntletId = gauntlet.getDataValue('gauntlet_id');
 
       // 2. Create ladder
-      await Ladder.create({
+      const ladder = await Ladder.create({
         gauntlet_id: gauntletId
       }, { transaction });
 
-      // 3. Create user boat lineup
+      const ladderId = ladder.getDataValue('ladder_id');
+
+      // 3. Create initial ladder position for the user (starting at bottom)
+      console.log('🔍 Creating ladder position with data:', {
+        ladder_id: ladderId,
+        athlete_id: created_by,
+        position: 1,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        win_rate: 0.00,
+        total_matches: 0,
+        points: 0,
+        streak_type: 'none',
+        streak_count: 0,
+        joined_date: new Date().toISOString().split('T')[0],
+        last_updated: new Date()
+      });
+      
+      await LadderPosition.create({
+        ladder_id: ladderId,
+        athlete_id: created_by,
+        position: 1, // Start at bottom position
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        win_rate: 0.00,
+        total_matches: 0,
+        points: 0,
+        streak_type: 'none',
+        streak_count: 0,
+        joined_date: new Date().toISOString().split('T')[0], // DATEONLY format
+        last_updated: new Date() // DATE format
+      }, { transaction });
+
+      // 4. Create initial ladder progression record
+      console.log('🔍 Creating ladder progression with data:', {
+        ladder_id: ladderId,
+        athlete_id: created_by,
+        from_position: 0,
+        to_position: 1,
+        change: 1,
+        reason: 'new_athlete',
+        notes: 'Initial ladder entry - starting at bottom position',
+        date: new Date()
+      });
+      
+      await LadderProgression.create({
+        ladder_id: ladderId,
+        athlete_id: created_by,
+        from_position: 0, // No previous position (0 indicates starting)
+        to_position: 1, // Starting at bottom position
+        change: 1, // Positive change (entering the ladder)
+        reason: 'new_athlete',
+        notes: 'Initial ladder entry - starting at bottom position',
+        date: new Date()
+      }, { transaction });
+
+      // 5. Create user boat lineup
       if (!userBoat.selectedBoat?.id) {
         throw new Error('User boat must have a selected boat');
       }
@@ -310,7 +368,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         boat_id: userBoat.selectedBoat.id
       }, { transaction });
 
-      // 4. Create seat assignments for user boat
+      // 6. Create seat assignments for user boat
       if (userBoat.selectedRowers && userBoat.selectedRowers.length > 0) {
         for (let index = 0; index < userBoat.selectedRowers.length; index++) {
           const rower = userBoat.selectedRowers[index];
@@ -327,7 +385,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         }
       }
 
-      // 5. Create challenger lineups and seat assignments
+      // 7. Create challenger lineups and seat assignments
       for (const challenger of challengers) {
         if (challenger.selectedBoat && challenger.selectedRowers && challenger.selectedRowers.length > 0) {
           const challengerLineup = await GauntletLineup.create({
@@ -376,7 +434,20 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
                     as: 'athlete',
                     attributes: ['athlete_id', 'name', 'email']
                   }
-                ]
+                ],
+                order: [['position', 'ASC']]
+              },
+              {
+                model: LadderProgression,
+                as: 'progressions',
+                include: [
+                  {
+                    model: Athlete,
+                    as: 'athlete',
+                    attributes: ['athlete_id', 'name', 'email']
+                  }
+                ],
+                order: [['date', 'DESC']]
               }
             ]
           },
