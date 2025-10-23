@@ -284,7 +284,18 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
     let transactionCommitted = false;
 
     try {
+      console.log('🔍 Starting comprehensive gauntlet creation with data:', {
+        name,
+        description,
+        boat_type,
+        created_by,
+        status,
+        userBoat,
+        challengers: challengers.length
+      });
+
       // 1. Create gauntlet
+      console.log('🔍 Creating gauntlet...');
       const gauntlet = await Gauntlet.create({
         name,
         description,
@@ -294,13 +305,16 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       }, { transaction });
 
       const gauntletId = gauntlet.getDataValue('gauntlet_id');
+      console.log('✅ Gauntlet created with ID:', gauntletId);
 
       // 2. Create ladder
+      console.log('🔍 Creating ladder...');
       const ladder = await Ladder.create({
         gauntlet_id: gauntletId
       }, { transaction });
 
       const ladderId = ladder.getDataValue('ladder_id');
+      console.log('✅ Ladder created with ID:', ladderId);
 
       // 3. Create initial ladder position for the user (starting at bottom)
       console.log('🔍 Creating ladder position with data:', {
