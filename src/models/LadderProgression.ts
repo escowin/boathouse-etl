@@ -13,10 +13,12 @@ interface LadderProgressionAttributes {
   match_id?: string; // Optional reference to gauntlet_matches (changed to UUID)
   notes?: string;
   date: Date;
+  created_at: Date; // Add missing created_at field
+  updated_at: Date; // Add missing updated_at field
 }
 
 // Define the creation attributes interface
-interface LadderProgressionCreationAttributes extends Optional<LadderProgressionAttributes, 'progression_id' | 'match_id' | 'notes' | 'date'> {}
+interface LadderProgressionCreationAttributes extends Optional<LadderProgressionAttributes, 'progression_id' | 'match_id' | 'notes' | 'date' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
 class LadderProgression extends Model<LadderProgressionAttributes, LadderProgressionCreationAttributes> implements LadderProgressionAttributes {
@@ -30,6 +32,8 @@ class LadderProgression extends Model<LadderProgressionAttributes, LadderProgres
   public match_id?: string;
   public notes?: string;
   public date!: Date;
+  public created_at!: Date;
+  public updated_at!: Date;
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -93,6 +97,16 @@ LadderProgression.init(
       allowNull: true
     },
     date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW

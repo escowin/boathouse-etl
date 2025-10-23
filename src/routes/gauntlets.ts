@@ -366,7 +366,9 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         change: 1,
         reason: 'new_athlete',
         notes: 'Initial ladder entry - starting at bottom position',
-        date: new Date()
+        date: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
       });
       
       await LadderProgression.create({
@@ -377,7 +379,9 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         change: 1, // Positive change (entering the ladder)
         reason: 'new_athlete',
         notes: 'Initial ladder entry - starting at bottom position',
-        date: new Date()
+        date: new Date(),
+        created_at: new Date(), // Add missing created_at field
+        updated_at: new Date() // Add missing updated_at field
       }, { transaction });
 
       // 5. Create user boat lineup
