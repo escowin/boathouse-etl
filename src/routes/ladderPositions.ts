@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { LadderPosition, Ladder, Athlete } from '../models';
 import { authMiddleware } from '../auth/middleware';
 
@@ -99,6 +100,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
 
     // Create ladder position
     const ladderPosition = await LadderPosition.create({
+      position_id: randomUUID(), // Generate UUID for primary key
       ladder_id,
       athlete_id,
       position,

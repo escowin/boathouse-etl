@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { 
   Gauntlet, 
   GauntletMatch, 
@@ -237,7 +238,10 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       boat_type,
       status = 'setup',
       userBoat,
-      challengers = []
+      challengers = [],
+      // Accept UUIDs from frontend to ensure consistency
+      gauntlet_id,
+      ladder_id
     } = req.body;
 
     // Get the authenticated user's ID from the token
@@ -302,6 +306,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       // 1. Create gauntlet
       console.log('🔍 Creating gauntlet...');
       const gauntlet = await Gauntlet.create({
+        gauntlet_id: gauntlet_id || randomUUID(), // Use provided UUID or generate one
         name,
         description,
         boat_type,
@@ -315,6 +320,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       // 2. Create ladder
       console.log('🔍 Creating ladder...');
       const ladder = await Ladder.create({
+        ladder_id: ladder_id || randomUUID(), // Use provided UUID or generate one
         gauntlet_id: gauntletId
       }, { transaction });
 
@@ -341,6 +347,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       });
       
       await LadderPosition.create({
+        position_id: randomUUID(), // Generate UUID for primary key
         ladder_id: ladderId,
         athlete_id: created_by,
         position: 1, // Start at bottom position
@@ -373,6 +380,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       });
       
       await LadderProgression.create({
+        progression_id: randomUUID(), // Generate UUID for primary key
         ladder_id: ladderId,
         athlete_id: created_by,
         from_position: 0, // No previous position (0 indicates starting)
@@ -391,6 +399,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       }
 
       const userLineup = await GauntletLineup.create({
+        gauntlet_lineup_id: randomUUID(), // Generate UUID for primary key
         gauntlet_id: gauntletId,
         boat_id: userBoat.selectedBoat.id
       }, { transaction });
@@ -404,6 +413,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
           const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
           
           await GauntletSeatAssignment.create({
+            gauntlet_seat_assignment_id: randomUUID(), // Generate UUID for primary key
             gauntlet_lineup_id: userLineup.getDataValue('gauntlet_lineup_id'),
             athlete_id: rower.id,
             seat_number: seatNumber,
@@ -416,6 +426,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       for (const challenger of challengers) {
         if (challenger.selectedBoat && challenger.selectedRowers && challenger.selectedRowers.length > 0) {
           const challengerLineup = await GauntletLineup.create({
+            gauntlet_lineup_id: randomUUID(), // Generate UUID for primary key
             gauntlet_id: gauntletId,
             boat_id: challenger.selectedBoat.id
           }, { transaction });
@@ -427,6 +438,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
             const side = isScullingBoat ? 'scull' : (seatNumber % 2 === 1 ? 'port' : 'starboard');
             
             await GauntletSeatAssignment.create({
+              gauntlet_seat_assignment_id: randomUUID(), // Generate UUID for primary key
               gauntlet_lineup_id: challengerLineup.getDataValue('gauntlet_lineup_id'),
               athlete_id: rower.id,
               seat_number: seatNumber,
@@ -868,6 +880,7 @@ router.post('/:gauntletId/lineups', authMiddleware.verifyToken, async (req: Requ
     }
 
     const lineup = await GauntletLineup.create({
+      gauntlet_lineup_id: randomUUID(), // Generate UUID for primary key
       gauntlet_id: gauntletId!,
       boat_id: boat_id as string,
       match_id: match_id || null
@@ -1133,6 +1146,7 @@ router.post('/:gauntletId/lineups/:lineupId/seat-assignments', authMiddleware.ve
     }
 
     const seatAssignment = await GauntletSeatAssignment.create({
+      gauntlet_seat_assignment_id: randomUUID(), // Generate UUID for primary key
       gauntlet_lineup_id: lineupId!,
       athlete_id: athlete_id as string,
       seat_number: seat_number as number,
