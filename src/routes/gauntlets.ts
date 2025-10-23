@@ -315,7 +315,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         points: 0,
         streak_type: 'none',
         streak_count: 0,
-        joined_date: new Date().toISOString().split('T')[0],
+        joined_date: new Date(),
         last_updated: new Date()
       });
       
@@ -331,7 +331,7 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         points: 0,
         streak_type: 'none',
         streak_count: 0,
-        joined_date: new Date().toISOString().split('T')[0], // DATEONLY format
+        joined_date: new Date(), // DATEONLY format - Sequelize will handle the conversion
         last_updated: new Date() // DATE format
       }, { transaction });
 
