@@ -19,10 +19,12 @@ interface LadderPositionAttributes {
   last_match_date?: Date;
   joined_date: Date;
   last_updated: Date;
+  created_at: Date; // Add missing created_at field
+  updated_at: Date; // Add missing updated_at field
 }
 
 // Define the creation attributes interface
-interface LadderPositionCreationAttributes extends Optional<LadderPositionAttributes, 'position_id' | 'previous_position' | 'wins' | 'losses' | 'draws' | 'win_rate' | 'total_matches' | 'points' | 'streak_type' | 'streak_count' | 'last_match_date' | 'joined_date' | 'last_updated'> {}
+interface LadderPositionCreationAttributes extends Optional<LadderPositionAttributes, 'position_id' | 'previous_position' | 'wins' | 'losses' | 'draws' | 'win_rate' | 'total_matches' | 'points' | 'streak_type' | 'streak_count' | 'last_match_date' | 'joined_date' | 'last_updated' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
 class LadderPosition extends Model<LadderPositionAttributes, LadderPositionCreationAttributes> implements LadderPositionAttributes {
@@ -42,6 +44,8 @@ class LadderPosition extends Model<LadderPositionAttributes, LadderPositionCreat
   public last_match_date?: Date;
   public joined_date!: Date;
   public last_updated!: Date;
+  public created_at!: Date;
+  public updated_at!: Date;
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -133,6 +137,16 @@ LadderPosition.init(
       defaultValue: DataTypes.NOW
     },
     last_updated: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
