@@ -11,6 +11,7 @@ import {
 } from '../models';
 import { authMiddleware } from '../auth/middleware';
 import sequelize from '../config/database';
+import { QueryTypes } from 'sequelize';
 
 const router = Router();
 
@@ -636,7 +637,78 @@ router.delete('/:id', authMiddleware.verifyToken, async (req: Request, res: Resp
       })
     ]);
 
-    // Delete the gauntlet (cascade delete will handle related records)
+    // Manual cascade deletion in correct order to avoid foreign key constraints
+    // Use raw SQL to find ladder IDs first, then delete related records
+    
+    // 1. Find all ladder IDs for this gauntlet
+    const ladderResults = await sequelize.query(
+      'SELECT ladder_id FROM ladders WHERE gauntlet_id = :gauntletId',
+      {
+        replacements: { gauntletId: id },
+        type: QueryTypes.SELECT
+      }
+    ) as Array<{ ladder_id: string }>;
+    
+    const ladderIds = ladderResults.map(r => r.ladder_id);
+    
+    if (ladderIds.length > 0) {
+      // 2. Delete ladder progressions
+      await sequelize.query(
+        `DELETE FROM ladder_progressions WHERE ladder_id IN (${ladderIds.map(() => '?').join(',')})`,
+        {
+          replacements: ladderIds,
+          type: QueryTypes.DELETE
+        }
+      );
+
+      // 3. Delete ladder positions
+      await sequelize.query(
+        `DELETE FROM ladder_positions WHERE ladder_id IN (${ladderIds.map(() => '?').join(',')})`,
+        {
+          replacements: ladderIds,
+          type: QueryTypes.DELETE
+        }
+      );
+
+      // 4. Delete ladders
+      await Ladder.destroy({
+        where: { gauntlet_id: id }
+      });
+    }
+
+    // 5. Find all lineup IDs for this gauntlet
+    const lineupResults = await sequelize.query(
+      'SELECT gauntlet_lineup_id FROM gauntlet_lineups WHERE gauntlet_id = :gauntletId',
+      {
+        replacements: { gauntletId: id },
+        type: QueryTypes.SELECT
+      }
+    ) as Array<{ gauntlet_lineup_id: string }>;
+    
+    const lineupIds = lineupResults.map(r => r.gauntlet_lineup_id);
+    
+    if (lineupIds.length > 0) {
+      // 6. Delete gauntlet seat assignments
+      await sequelize.query(
+        `DELETE FROM gauntlet_seat_assignments WHERE gauntlet_lineup_id IN (${lineupIds.map(() => '?').join(',')})`,
+        {
+          replacements: lineupIds,
+          type: QueryTypes.DELETE
+        }
+      );
+    }
+
+    // 7. Delete gauntlet lineups
+    await GauntletLineup.destroy({
+      where: { gauntlet_id: id }
+    });
+
+    // 8. Delete gauntlet matches
+    await GauntletMatch.destroy({
+      where: { gauntlet_id: id }
+    });
+
+    // 9. Finally delete the gauntlet itself
     await gauntlet.destroy();
 
     return res.json({
