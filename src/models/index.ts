@@ -267,7 +267,8 @@ export function setupAssociations() {
   // Gauntlet -> GauntletMatch (One-to-Many)
   Gauntlet.hasMany(GauntletMatch, {
     foreignKey: 'gauntlet_id',
-    as: 'matches'
+    as: 'matches',
+    onDelete: 'CASCADE'
   });
 
   GauntletMatch.belongsTo(Gauntlet, {
@@ -278,7 +279,8 @@ export function setupAssociations() {
   // Gauntlet -> GauntletLineup (One-to-Many)
   Gauntlet.hasMany(GauntletLineup, {
     foreignKey: 'gauntlet_id',
-    as: 'gauntlet_lineups'
+    as: 'gauntlet_lineups',
+    onDelete: 'CASCADE'
   });
 
   GauntletLineup.belongsTo(Gauntlet, {
@@ -302,7 +304,8 @@ export function setupAssociations() {
   // GauntletLineup -> GauntletSeatAssignment (One-to-Many)
   GauntletLineup.hasMany(GauntletSeatAssignment, {
     foreignKey: 'gauntlet_lineup_id',
-    as: 'gauntlet_seat_assignments'
+    as: 'gauntlet_seat_assignments',
+    onDelete: 'CASCADE'
   });
 
   GauntletSeatAssignment.belongsTo(GauntletLineup, {
@@ -324,7 +327,8 @@ export function setupAssociations() {
   // Gauntlet -> Ladder (One-to-One) - simplified relationship
   Gauntlet.hasOne(Ladder, {
     foreignKey: 'gauntlet_id',
-    as: 'ladder'
+    as: 'ladder',
+    onDelete: 'CASCADE'
   });
 
   Ladder.belongsTo(Gauntlet, {
@@ -335,7 +339,8 @@ export function setupAssociations() {
   // Ladder -> LadderPosition (One-to-Many)
   Ladder.hasMany(LadderPosition, {
     foreignKey: 'ladder_id',
-    as: 'positions'
+    as: 'positions',
+    onDelete: 'CASCADE'
   });
 
   LadderPosition.belongsTo(Ladder, {
@@ -357,7 +362,8 @@ export function setupAssociations() {
   // Ladder -> LadderProgression (One-to-Many)
   Ladder.hasMany(LadderProgression, {
     foreignKey: 'ladder_id',
-    as: 'progressions'
+    as: 'progressions',
+    onDelete: 'CASCADE'
   });
 
   LadderProgression.belongsTo(Ladder, {
@@ -379,7 +385,8 @@ export function setupAssociations() {
   // GauntletMatch -> LadderProgression (One-to-Many) - optional relationship
   GauntletMatch.hasMany(LadderProgression, {
     foreignKey: 'match_id',
-    as: 'ladder_progressions'
+    as: 'ladder_progressions',
+    onDelete: 'CASCADE'
   });
 
   LadderProgression.belongsTo(GauntletMatch, {
