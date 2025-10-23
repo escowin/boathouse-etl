@@ -22,6 +22,9 @@ export class AuthMiddleware {
    * Middleware to verify JWT token
    */
   public verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    console.log('🔐 AUTH MIDDLEWARE - Verifying token for:', req.path);
+    console.log('🔐 Auth header:', req.headers.authorization ? 'Present' : 'Missing');
+    
     try {
       const authHeader = req.headers.authorization;
       
@@ -48,9 +51,12 @@ export class AuthMiddleware {
       }
 
       // Verify token
+      console.log('🔐 Verifying token...');
       const result = await this.authService.verifyToken(token);
+      console.log('🔐 Token verification result:', result.success ? 'SUCCESS' : 'FAILED', result.message);
       
       if (!result.success) {
+        console.log('🔐 Token verification failed:', result.message);
         res.status(401).json({
           success: false,
           message: result.message || 'Invalid or expired token',

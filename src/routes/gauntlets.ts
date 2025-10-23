@@ -225,6 +225,10 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
  * Create a gauntlet with all associated entities in one atomic operation
  */
 router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, res: Response) => {
+  console.log('🚀 COMPREHENSIVE GAUNTLET ENDPOINT HIT!');
+  console.log('🔍 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('🔍 Request headers:', req.headers);
+  
   try {
     const {
       name,
