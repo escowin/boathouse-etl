@@ -334,7 +334,9 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         streak_type: 'none',
         streak_count: 0,
         joined_date: new Date(),
-        last_updated: new Date()
+        last_updated: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
       });
       
       await LadderPosition.create({
@@ -350,7 +352,9 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         streak_type: 'none',
         streak_count: 0,
         joined_date: new Date(), // DATEONLY format - Sequelize will handle the conversion
-        last_updated: new Date() // DATE format
+        last_updated: new Date(), // DATE format
+        created_at: new Date(), // Add missing created_at field
+        updated_at: new Date() // Add missing updated_at field
       }, { transaction });
 
       // 4. Create initial ladder progression record
