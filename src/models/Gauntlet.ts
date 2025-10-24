@@ -18,18 +18,8 @@ interface GauntletCreationAttributes extends Optional<GauntletAttributes, 'gaunt
 
 // Define the model class
 class Gauntlet extends Model<GauntletAttributes, GauntletCreationAttributes> implements GauntletAttributes {
-  public gauntlet_id!: string;
-  public name!: string;
-  public description?: string;
-  public boat_type!: '1x' | '2x' | '2-' | '4x' | '4+' | '8+';
-  public created_by!: string;
-  public status!: 'setup' | 'active' | 'completed' | 'cancelled';
-  public created_at!: Date;
-  public updated_at!: Date;
-
-  // Timestamps
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
+  // The attributes are accessible through the model instance without explicit declarations
 }
 
 // Initialize the model

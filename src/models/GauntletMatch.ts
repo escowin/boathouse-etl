@@ -20,16 +20,8 @@ interface GauntletMatchCreationAttributes extends Optional<GauntletMatchAttribut
 
 // Define the model class
 class GauntletMatch extends Model<GauntletMatchAttributes, GauntletMatchCreationAttributes> implements GauntletMatchAttributes {
-  public match_id!: string;
-  public gauntlet_id!: string;
-  public workout!: string;
-  public sets!: number;
-  public user_wins!: number;
-  public user_losses!: number;
-  public match_date!: Date;
-  public notes?: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
+  // The attributes are accessible through the model instance without explicit declarations
 }
 
 // Initialize the model

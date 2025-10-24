@@ -28,28 +28,8 @@ interface LadderPositionCreationAttributes extends Optional<LadderPositionAttrib
 
 // Define the model class
 class LadderPosition extends Model<LadderPositionAttributes, LadderPositionCreationAttributes> implements LadderPositionAttributes {
-  public position_id!: string;
-  public ladder_id!: string;
-  public athlete_id!: string;
-  public position!: number;
-  public previous_position?: number;
-  public wins!: number;
-  public losses!: number;
-  public draws!: number;
-  public win_rate!: number;
-  public total_matches!: number;
-  public points!: number;
-  public streak_type!: 'win' | 'loss' | 'draw' | 'none';
-  public streak_count!: number;
-  public last_match_date?: Date;
-  public joined_date!: Date;
-  public last_updated!: Date;
-  public created_at!: Date;
-  public updated_at!: Date;
-
-  // Timestamps
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
+  // The attributes are accessible through the model instance without explicit declarations
 }
 
 // Initialize the model

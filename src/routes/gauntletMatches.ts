@@ -86,7 +86,7 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
         error: 'NOT_FOUND'
       });
     }
-    console.log('✅ GauntletMatches API: Gauntlet found:', gauntlet.gauntlet_id);
+    console.log('✅ GauntletMatches API: Gauntlet found:', gauntlet?.gauntlet_id || 'undefined');
 
     // Validate sets
     if (sets < 1) {
