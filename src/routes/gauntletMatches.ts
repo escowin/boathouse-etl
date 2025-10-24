@@ -140,12 +140,12 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
       console.log('📈 GauntletMatches API: Processing ladder updates...');
       try {
         const ladderResult = await LadderService.processMatchResult({
-          match_id: match.match_id,
-          gauntlet_id: match.gauntlet_id,
-          user_wins: match.user_wins,
-          user_losses: match.user_losses,
-          sets: match.sets,
-          match_date: match.match_date,
+          match_id: match.match_id as string,
+          gauntlet_id: match.gauntlet_id as string,
+          user_wins: match.user_wins as number,
+          user_losses: match.user_losses as number,
+          sets: match.sets as number,
+          match_date: match.match_date as Date,
           athlete_id: athleteId
         });
 
@@ -223,9 +223,9 @@ router.put('/:id', authMiddleware.verifyToken, async (req: Request, res: Respons
     }
 
     // Validate wins/losses if provided
-    const wins = updates.user_wins !== undefined ? updates.user_wins : match.user_wins;
-    const losses = updates.user_losses !== undefined ? updates.user_losses : match.user_losses;
-    const totalSets = updates.sets !== undefined ? updates.sets : match.sets;
+    const wins = updates.user_wins !== undefined ? updates.user_wins : (match.user_wins as number);
+    const losses = updates.user_losses !== undefined ? updates.user_losses : (match.user_losses as number);
+    const totalSets = updates.sets !== undefined ? updates.sets : (match.sets as number);
 
     if (wins < 0 || losses < 0) {
       return res.status(400).json({

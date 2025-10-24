@@ -196,12 +196,12 @@ export class LadderService {
     });
 
     // Simple ladder logic (can be enhanced with more complex rules)
-    if (matchResult === 'match_win' && currentPosition.position > 1) {
+    if (matchResult === 'match_win' && (currentPosition.position) > 1) {
       // Move up one position
-      return currentPosition.position - 1;
-    } else if (matchResult === 'match_loss' && currentPosition.position < totalPositions) {
+      return (currentPosition.position) - 1;
+    } else if (matchResult === 'match_loss' && (currentPosition.position) < totalPositions) {
       // Move down one position
-      return currentPosition.position + 1;
+      return (currentPosition.position) + 1;
     }
     
     // No change for draws or if already at top/bottom
