@@ -17,7 +17,7 @@ interface GauntletAttributes {
 interface GauntletCreationAttributes extends Optional<GauntletAttributes, 'gauntlet_id' | 'description' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
-class Gauntlet extends Model<GauntletAttributes, GauntletCreationAttributes> implements GauntletAttributes {
+class Gauntlet extends Model<GauntletAttributes, GauntletCreationAttributes> {
   // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
   // The attributes are accessible through the model instance without explicit declarations
 }

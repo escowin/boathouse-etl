@@ -19,7 +19,7 @@ interface GauntletMatchAttributes {
 interface GauntletMatchCreationAttributes extends Optional<GauntletMatchAttributes, 'match_id' | 'notes' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
-class GauntletMatch extends Model<GauntletMatchAttributes, GauntletMatchCreationAttributes> implements GauntletMatchAttributes {
+class GauntletMatch extends Model<GauntletMatchAttributes, GauntletMatchCreationAttributes> {
   // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
   // The attributes are accessible through the model instance without explicit declarations
 }

@@ -27,7 +27,7 @@ interface LadderPositionAttributes {
 interface LadderPositionCreationAttributes extends Optional<LadderPositionAttributes, 'position_id' | 'previous_position' | 'wins' | 'losses' | 'draws' | 'win_rate' | 'total_matches' | 'points' | 'streak_type' | 'streak_count' | 'last_match_date' | 'joined_date' | 'last_updated' | 'created_at' | 'updated_at'> {}
 
 // Define the model class
-class LadderPosition extends Model<LadderPositionAttributes, LadderPositionCreationAttributes> implements LadderPositionAttributes {
+class LadderPosition extends Model<LadderPositionAttributes, LadderPositionCreationAttributes> {
   // Remove public class fields to avoid shadowing Sequelize's attribute getters & setters
   // The attributes are accessible through the model instance without explicit declarations
 }
