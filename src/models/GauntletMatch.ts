@@ -30,10 +30,6 @@ class GauntletMatch extends Model<GauntletMatchAttributes, GauntletMatchCreation
   public notes?: string;
   public created_at!: Date;
   public updated_at!: Date;
-
-  // Timestamps
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 }
 
 // Initialize the model
@@ -95,8 +91,6 @@ GauntletMatch.init(
     modelName: 'GauntletMatch',
     tableName: 'gauntlet_matches',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
     indexes: [
       {
         name: 'idx_gauntlet_matches_gauntlet_id',
