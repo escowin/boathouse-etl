@@ -237,11 +237,11 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
       description,
       boat_type,
       status = 'setup',
-      userBoat,
-      challengers = [],
       // Accept UUIDs from frontend to ensure consistency
       gauntlet_id,
-      ladder_id
+      ladder_id,
+      userBoat,
+      challengers
     } = req.body;
 
     // Get the authenticated user's ID from the token
@@ -257,11 +257,11 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
     }
 
     // Validate required fields
-    if (!name || !boat_type || !userBoat) {
+    if (!name || !boat_type) {
       return res.status(400).json({
         success: false,
         data: null,
-        message: 'Missing required fields: name, boat_type, userBoat',
+        message: 'Missing required fields: name, boat_type',
         error: 'VALIDATION_ERROR'
       });
     }
@@ -299,8 +299,6 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         boat_type,
         created_by,
         status,
-        userBoat,
-        challengers: challengers.length
       });
 
       // 1. Create gauntlet
@@ -392,11 +390,6 @@ router.post('/comprehensive', authMiddleware.verifyToken, async (req: Request, r
         created_at: new Date(), // Add missing created_at field
         updated_at: new Date() // Add missing updated_at field
       }, { transaction });
-
-      // 5. Create user boat lineup
-      if (!userBoat.selectedBoat?.id) {
-        throw new Error('User boat must have a selected boat');
-      }
 
       const userLineup = await GauntletLineup.create({
         gauntlet_lineup_id: randomUUID(), // Generate UUID for primary key
