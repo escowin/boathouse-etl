@@ -71,7 +71,7 @@ async function fixAthleteStatus() {
     process.exit(1);
   } finally {
     // Close database connection
-    await DatabaseUtils.close();
+    // Database connection will be closed automatically
   }
 }
 

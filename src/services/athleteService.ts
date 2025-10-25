@@ -7,25 +7,25 @@ export interface AthleteFilters {
 }
 
 export interface AthleteWithUsraData {
-  // Essential fields for localStorage
-  id: string;
+  // Essential fields for localStorage - using snake_case to match database and RowCalibur
+  athlete_id: string;
   name: string;
   type: 'Cox' | 'Rower' | 'Rower & Coxswain';
   active: boolean;
   gender?: 'M' | 'F';
   age?: number | undefined;
-  birthYear?: number | string;
-  portStarboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
-  sweepScull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
-  usraAgeCategory?: string;
-  weightKg?: number | string;
-  heightCm?: number | string; // Height in cm - athletes can update this in their profiles
+  birth_year?: number | string;
+  port_starboard?: 'Starboard' | 'Prefer Starboard' | 'Either' | 'Prefer Port' | 'Port';
+  sweep_scull?: 'Sweep' | 'Scull' | 'Sweep & Scull';
+  usra_age_category?: string;
+  weight_kg?: number | string;
+  height_cm?: number | string; // Height in cm - athletes can update this in their profiles
   email?: string;
   phone?: string;
-  bowInDark?: boolean;
-  experience?: number | string;
-  emergencyContact?: string;
-  emergencyContactPhone?: string;
+  bow_in_dark?: boolean;
+  experience_years?: number | string;
+  emergency_contact?: string;
+  emergency_contact_phone?: string;
 }
 
 export class AthleteService {
@@ -95,25 +95,25 @@ export class AthleteService {
         const athleteData = athlete.toJSON() as any;
         
         return {
-          // Essential fields for localStorage (mapped from database)
-          id: athleteData.athlete_id, // Map athlete_id to id for frontend compatibility
+          // Essential fields for localStorage - using snake_case to match database and RowCalibur
+          athlete_id: athleteData.athlete_id,
           name: athleteData.name,
           type: athleteData.type,
           active: athleteData.active,
           gender: athleteData.gender,
           age: athleteData.birth_year ? currentYear - athleteData.birth_year : undefined,
-          birthYear: athleteData.birth_year,
-          portStarboard: athleteData.port_starboard,
-          sweepScull: athleteData.sweep_scull,
-          usraAgeCategory: athleteData.usra_age_category?.category || undefined,
-          weightKg: athleteData.weight_kg,
-          heightCm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          birth_year: athleteData.birth_year,
+          port_starboard: athleteData.port_starboard,
+          sweep_scull: athleteData.sweep_scull,
+          usra_age_category: athleteData.usra_age_category?.category || undefined,
+          weight_kg: athleteData.weight_kg,
+          height_cm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
           email: athleteData.email,
           phone: athleteData.phone,
-          bowInDark: athleteData.bow_in_dark,
-          experience: athleteData.experience_years,
-          emergencyContact: athleteData.emergency_contact,
-          emergencyContactPhone: athleteData.emergency_contact_phone
+          bow_in_dark: athleteData.bow_in_dark,
+          experience_years: athleteData.experience_years,
+          emergency_contact: athleteData.emergency_contact,
+          emergency_contact_phone: athleteData.emergency_contact_phone
         };
       });
 
@@ -176,25 +176,25 @@ export class AthleteService {
       const currentYear = new Date().getFullYear();
 
         return {
-          // Essential fields for localStorage (mapped from database)
-          id: athleteData.athlete_id, // Map athlete_id to id for frontend compatibility
+          // Essential fields for localStorage - using snake_case to match database and RowCalibur
+          athlete_id: athleteData.athlete_id,
           name: athleteData.name,
           type: athleteData.type,
           active: athleteData.active,
           gender: athleteData.gender,
           age: athleteData.birth_year ? currentYear - athleteData.birth_year : undefined,
-          birthYear: athleteData.birth_year,
-          portStarboard: athleteData.port_starboard,
-          sweepScull: athleteData.sweep_scull,
-          usraAgeCategory: athleteData.usra_age_category?.category || undefined,
-          weightKg: athleteData.weight_kg,
-          heightCm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
+          birth_year: athleteData.birth_year,
+          port_starboard: athleteData.port_starboard,
+          sweep_scull: athleteData.sweep_scull,
+          usra_age_category: athleteData.usra_age_category?.category || undefined,
+          weight_kg: athleteData.weight_kg,
+          height_cm: athleteData.height_cm, // Height in cm - athletes can update this in their profiles
           email: athleteData.email,
           phone: athleteData.phone,
-          bowInDark: athleteData.bow_in_dark,
-          experience: athleteData.experience_years,
-          emergencyContact: athleteData.emergency_contact,
-          emergencyContactPhone: athleteData.emergency_contact_phone
+          bow_in_dark: athleteData.bow_in_dark,
+          experience_years: athleteData.experience_years,
+          emergency_contact: athleteData.emergency_contact,
+          emergency_contact_phone: athleteData.emergency_contact_phone
         };
 
     } catch (error) {
@@ -234,16 +234,16 @@ export class AthleteService {
         return null;
       }
 
-      // Map frontend field names to database field names
+      // Map frontend field names to database field names (now both use snake_case)
       const dbUpdateData: any = {};
       
-      if (updateData.heightCm !== undefined) {
+      if (updateData.height_cm !== undefined) {
         // Convert empty string to null for numeric fields
-        dbUpdateData.height_cm = updateData.heightCm === '' ? null : updateData.heightCm;
+        dbUpdateData.height_cm = updateData.height_cm === '' ? null : updateData.height_cm;
       }
-      if (updateData.weightKg !== undefined) {
+      if (updateData.weight_kg !== undefined) {
         // Convert empty string to null for numeric fields
-        dbUpdateData.weight_kg = updateData.weightKg === '' ? null : updateData.weightKg;
+        dbUpdateData.weight_kg = updateData.weight_kg === '' ? null : updateData.weight_kg;
       }
       if (updateData.email !== undefined) {
         dbUpdateData.email = updateData.email;
@@ -251,28 +251,28 @@ export class AthleteService {
       if (updateData.phone !== undefined) {
         dbUpdateData.phone = updateData.phone;
       }
-      if (updateData.emergencyContact !== undefined) {
-        dbUpdateData.emergency_contact = updateData.emergencyContact;
+      if (updateData.emergency_contact !== undefined) {
+        dbUpdateData.emergency_contact = updateData.emergency_contact;
       }
-      if (updateData.emergencyContactPhone !== undefined) {
-        dbUpdateData.emergency_contact_phone = updateData.emergencyContactPhone;
+      if (updateData.emergency_contact_phone !== undefined) {
+        dbUpdateData.emergency_contact_phone = updateData.emergency_contact_phone;
       }
-      if (updateData.portStarboard !== undefined) {
-        dbUpdateData.port_starboard = updateData.portStarboard;
+      if (updateData.port_starboard !== undefined) {
+        dbUpdateData.port_starboard = updateData.port_starboard;
       }
-      if (updateData.sweepScull !== undefined) {
-        dbUpdateData.sweep_scull = updateData.sweepScull;
+      if (updateData.sweep_scull !== undefined) {
+        dbUpdateData.sweep_scull = updateData.sweep_scull;
       }
-      if (updateData.bowInDark !== undefined) {
-        dbUpdateData.bow_in_dark = updateData.bowInDark;
+      if (updateData.bow_in_dark !== undefined) {
+        dbUpdateData.bow_in_dark = updateData.bow_in_dark;
       }
-      if (updateData.experience !== undefined) {
+      if (updateData.experience_years !== undefined) {
         // Convert empty string to null for numeric fields
-        dbUpdateData.experience_years = updateData.experience === '' ? null : updateData.experience;
+        dbUpdateData.experience_years = updateData.experience_years === '' ? null : updateData.experience_years;
       }
-      if (updateData.birthYear !== undefined) {
+      if (updateData.birth_year !== undefined) {
         // Convert empty string to null for numeric fields
-        dbUpdateData.birth_year = updateData.birthYear === '' ? null : updateData.birthYear;
+        dbUpdateData.birth_year = updateData.birth_year === '' ? null : updateData.birth_year;
       }
 
       // Update the athlete

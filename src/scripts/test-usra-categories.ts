@@ -20,10 +20,10 @@ async function testUsraCategoryResolution() {
     if (indexedDbAthletes.length > 0) {
       const sample = indexedDbAthletes[0];
       console.log('📋 Sample athlete data:');
-      console.log(`   Name: ${sample.name}`);
-      console.log(`   Age: ${sample.age || 'N/A'}`);
-      console.log(`   USRA Category: ${sample.usra_category || 'N/A'}`);
-      console.log(`   USRA Category ID: ${sample.usra_age_category_id || 'N/A'}`);
+      console.log(`   Name: ${sample?.name || 'N/A'}`);
+      console.log(`   Age: ${sample?.age || 'N/A'}`);
+      console.log(`   USRA Category: ${sample?.usra_age_category || 'N/A'}`);
+      console.log(`   USRA Category ID: ${sample?.usra_age_category || 'N/A'}`);
     }
 
     // Test 2: Get all athletes with USRA categories
@@ -33,7 +33,7 @@ async function testUsraCategoryResolution() {
     
     // Analyze USRA category distribution
     const categoryStats = allAthletes.reduce((stats, athlete) => {
-      const category = athlete.usra_category || 'No Category';
+      const category = athlete.usra_age_category || 'No Category';
       stats[category] = (stats[category] || 0) + 1;
       return stats;
     }, {} as Record<string, number>);
@@ -55,13 +55,13 @@ async function testUsraCategoryResolution() {
     if (allAthletes.length > 0) {
       console.log('\n📊 Test 4: Getting single athlete profile...');
       const firstAthlete = allAthletes[0];
-      const singleAthlete = await athleteService.getAthleteWithUsraCategory(firstAthlete.athlete_id);
+      const singleAthlete = await athleteService.getAthleteWithUsraCategory(firstAthlete?.athlete_id || '');
       
       if (singleAthlete) {
         console.log('✅ Single athlete retrieved successfully');
         console.log(`   Name: ${singleAthlete.name}`);
         console.log(`   Age: ${singleAthlete.age || 'N/A'}`);
-        console.log(`   USRA Category: ${singleAthlete.usra_category || 'N/A'}`);
+        console.log(`   USRA Category: ${singleAthlete.usra_age_category || 'N/A'}`);
         console.log(`   Email: ${singleAthlete.email || 'N/A'}`);
       } else {
         console.log('❌ Failed to retrieve single athlete');
@@ -91,8 +91,8 @@ async function testUsraCategoryResolution() {
     console.log(`   - Total athletes: ${allAthletes.length}`);
     console.log(`   - IndexedDB athletes: ${indexedDbAthletes.length}`);
     console.log(`   - Active competitive athletes: ${activeAthletes.length}`);
-    console.log(`   - Athletes with USRA categories: ${allAthletes.filter(a => a.usra_category).length}`);
-    console.log(`   - Athletes without USRA categories: ${allAthletes.filter(a => !a.usra_category).length}`);
+    console.log(`   - Athletes with USRA categories: ${allAthletes.filter(a => a.usra_age_category).length}`);
+    console.log(`   - Athletes without USRA categories: ${allAthletes.filter(a => !a.usra_age_category).length}`);
 
   } catch (error) {
     console.error('❌ Test failed:', error);
