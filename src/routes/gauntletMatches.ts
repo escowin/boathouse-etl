@@ -139,13 +139,14 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
     if (process_ladder) {
       console.log('📈 GauntletMatches API: Processing ladder updates...');
       try {
+        // Use the original request data instead of the match object to avoid undefined values
         const ladderResult = await LadderService.processMatchResult({
-          match_id: match.match_id as string,
-          gauntlet_id: match.gauntlet_id as string,
-          user_wins: match.user_wins as number,
-          user_losses: match.user_losses as number,
-          sets: match.sets as number,
-          match_date: match.match_date as Date,
+          match_id: match_id,
+          gauntlet_id: gauntlet_id,
+          user_wins: user_wins,
+          user_losses: user_losses,
+          sets: sets,
+          match_date: new Date(match_date),
           athlete_id: athleteId
         });
 
@@ -161,7 +162,18 @@ router.post('/', authMiddleware.verifyToken, async (req: Request, res: Response)
     const responseData = {
       success: true,
       data: {
-        match,
+        match: {
+          match_id: match.match_id,
+          gauntlet_id: match.gauntlet_id,
+          workout: match.workout,
+          sets: match.sets,
+          user_wins: match.user_wins,
+          user_losses: match.user_losses,
+          match_date: match.match_date,
+          notes: match.notes,
+          created_at: match.created_at,
+          updated_at: match.updated_at
+        },
         ladderUpdate
       },
       message: ladderUpdate 

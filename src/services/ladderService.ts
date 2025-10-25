@@ -25,18 +25,23 @@ export class LadderService {
     const transaction = await sequelize.transaction();
     
     try {
-      // 1. Get the ladder for this gauntlet
-      const ladder = await Ladder.findOne({
+      // 1. Get or create the ladder for this gauntlet
+      let ladder = await Ladder.findOne({
         where: { gauntlet_id: matchData.gauntlet_id },
         transaction
       });
       
       if (!ladder) {
-        throw new Error('No ladder found for this gauntlet');
+        console.log('No ladder found for gauntlet, creating one...');
+        ladder = await Ladder.create({
+          ladder_id: randomUUID(),
+          gauntlet_id: matchData.gauntlet_id
+        }, { transaction });
+        console.log('Created new ladder:', ladder.ladder_id);
       }
 
-      // 2. Get current ladder position for the athlete
-      const currentPosition = await LadderPosition.findOne({
+      // 2. Get or create current ladder position for the athlete
+      let currentPosition = await LadderPosition.findOne({
         where: {
           ladder_id: ladder.ladder_id,
           athlete_id: matchData.athlete_id
@@ -45,7 +50,31 @@ export class LadderService {
       });
 
       if (!currentPosition) {
-        throw new Error('Athlete not found in ladder');
+        console.log('No ladder position found for athlete, creating one...');
+        // Get the next available position (highest position + 1)
+        const maxPosition = await LadderPosition.max('position', {
+          where: { ladder_id: ladder.ladder_id },
+          transaction
+        }) as number | null;
+        const nextPosition = (maxPosition || 0) + 1;
+        
+        currentPosition = await LadderPosition.create({
+          position_id: randomUUID(),
+          ladder_id: ladder.ladder_id,
+          athlete_id: matchData.athlete_id,
+          position: nextPosition,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          win_rate: 0.00,
+          total_matches: 0,
+          points: 0,
+          streak_type: 'none',
+          streak_count: 0,
+          joined_date: new Date(),
+          last_updated: new Date()
+        }, { transaction });
+        console.log('Created new ladder position for athlete at position:', nextPosition);
       }
 
       // 3. Calculate match result and new statistics
