@@ -1,8 +1,10 @@
 import { Sequelize } from 'sequelize';
-import { env } from './env';
+import { getConfig } from '../shared';
+const config = getConfig();
+const { env } = config;
 
-// Database configuration interface
-interface DatabaseConfig {
+// ETL-optimized database configuration interface
+interface ETLDatabaseConfig {
   host: string;
   port: number;
   database: string;
@@ -21,10 +23,16 @@ interface DatabaseConfig {
     underscored: boolean;
     freezeTableName: boolean;
   };
+  // ETL-specific options
+  benchmark: boolean;
+  retry: {
+    match: RegExp[];
+    max: number;
+  };
 }
 
-// Get database configuration from environment variables
-const config: DatabaseConfig = {
+// ETL-optimized database configuration
+const etlConfig: ETLDatabaseConfig = {
   host: env.DB_HOST,
   port: env.DB_PORT,
   database: env.DB_NAME,
@@ -32,52 +40,68 @@ const config: DatabaseConfig = {
   password: env.DB_PASSWORD,
   dialect: 'postgres',
   logging: env.NODE_ENV === 'development' ? console.log : false,
+  // ETL-optimized connection pool (smaller, longer timeouts for bulk operations)
   pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
+    max: 5,        // Lower max connections for ETL
+    min: 0,        // No minimum connections needed
+    acquire: 60000, // Longer timeout for bulk operations
+    idle: 10000    // Standard idle timeout
   },
   define: {
     timestamps: true,
     underscored: true,
     freezeTableName: true
+  },
+  // ETL-specific optimizations
+  benchmark: env.NODE_ENV === 'development',
+  retry: {
+    match: [
+      /ETIMEDOUT/,
+      /EHOSTUNREACH/,
+      /ECONNRESET/,
+      /ECONNREFUSED/,
+      /ESOCKETTIMEDOUT/,
+      /EPIPE/,
+      /EAI_AGAIN/,
+      /SequelizeConnectionError/,
+      /SequelizeConnectionRefusedError/,
+      /SequelizeHostNotFoundError/,
+      /SequelizeHostNotReachableError/,
+      /SequelizeInvalidConnectionError/,
+      /SequelizeConnectionTimedOutError/
+    ],
+    max: 3
   }
 };
 
-// Create Sequelize instance
+// Create ETL-optimized Sequelize instance
 const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
+  etlConfig.database,
+  etlConfig.username,
+  etlConfig.password,
   {
-    host: config.host,
-    port: config.port,
-    dialect: config.dialect,
-    logging: config.logging,
-    pool: config.pool,
-    define: config.define,
-    // Additional options for ETL processes
-    benchmark: env.NODE_ENV === 'development',
-    retry: {
-      match: [
-        /ETIMEDOUT/,
-        /EHOSTUNREACH/,
-        /ECONNRESET/,
-        /ECONNREFUSED/,
-        /ETIMEDOUT/,
-        /ESOCKETTIMEDOUT/,
-        /EHOSTUNREACH/,
-        /EPIPE/,
-        /EAI_AGAIN/,
-        /SequelizeConnectionError/,
-        /SequelizeConnectionRefusedError/,
-        /SequelizeHostNotFoundError/,
-        /SequelizeHostNotReachableError/,
-        /SequelizeInvalidConnectionError/,
-        /SequelizeConnectionTimedOutError/
-      ],
-      max: 3
+    host: etlConfig.host,
+    port: etlConfig.port,
+    dialect: etlConfig.dialect,
+    logging: etlConfig.logging,
+    pool: etlConfig.pool,
+    define: etlConfig.define,
+    benchmark: etlConfig.benchmark,
+    retry: etlConfig.retry,
+    // ETL-specific optimizations
+    hooks: {
+      beforeBulkCreate: (instances: any, _options: any) => {
+        console.log(`🔄 ETL: Bulk creating ${instances.length} records`);
+      },
+      afterBulkCreate: (instances: any, _options: any) => {
+        console.log(`✅ ETL: Successfully created ${instances.length} records`);
+      },
+      beforeBulkUpdate: (_options: any) => {
+        console.log(`🔄 ETL: Bulk updating records`);
+      },
+      afterBulkUpdate: (_options: any) => {
+        console.log(`✅ ETL: Successfully updated records`);
+      }
     }
   }
 );
@@ -105,4 +129,4 @@ export const closeConnection = async (): Promise<void> => {
 };
 
 export default sequelize;
-export { config };
+export { etlConfig as config };

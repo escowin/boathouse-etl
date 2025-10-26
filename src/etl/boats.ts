@@ -4,7 +4,8 @@
 
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
-import { Boat } from '../models';
+import { getModels } from '../shared';
+const { Boat } = getModels();
 import { 
   ETLProcessConfig, 
   DataTransformationResult, 

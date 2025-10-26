@@ -3,7 +3,9 @@
  */
 
 import { google } from 'googleapis';
-import { env } from '../config/env';
+import { getConfig } from '../shared';
+const config = getConfig();
+const { env } = config;
 import { GoogleSheetsRow } from './types';
 
 export class GoogleSheetsService {

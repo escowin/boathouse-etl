@@ -2,7 +2,8 @@
  * Base ETL Process Class
  */
 
-import { ETLJob, sequelize } from '../models';
+import { getModels } from '../shared';
+const { ETLJob, sequelize } = getModels();
 import { 
   ETLResult, 
   ETLMetrics, 

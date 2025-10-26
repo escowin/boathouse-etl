@@ -34,7 +34,10 @@
       "@/services/*": ["src/services/*"],
       "@/models/*": ["src/models/*"],
       "@/utils/*": ["src/utils/*"],
-      "@/types/*": ["src/types/*"]
+      "@/types/*": ["src/types/*"],
+      "@crewhub/models": ["../crewhub/src/models"],
+      "@crewhub/config": ["../crewhub/src/config"],
+      "@crewhub/migrations": ["src/migrations"]
     }
   },
   "include": [

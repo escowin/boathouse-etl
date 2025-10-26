@@ -1,9 +1,12 @@
 import dotenv from 'dotenv';
 import { Op } from 'sequelize';
-import Athlete from '../models/Athlete';
+import { getModels } from '../shared';
 
 // Load environment variables
 dotenv.config();
+
+// Get shared models
+const { Athlete } = getModels();
 
 async function debugAthletes() {
   console.log('🔍 Debugging athlete data...');
@@ -36,7 +39,7 @@ async function debugAthletes() {
     console.log(`✅ Found ${athletes.length} athletes without PINs`);
     
     // Debug the actual data
-    athletes.forEach((athlete, index) => {
+    athletes.forEach((athlete: any, index: number) => {
       console.log(`Athlete ${index + 1}:`);
       console.log(`  - Raw data:`, athlete.toJSON());
       console.log(`  - athlete_id:`, athlete.athlete_id);

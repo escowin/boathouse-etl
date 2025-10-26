@@ -7,7 +7,10 @@
  */
 
 import { DatabaseUtils } from '../utils/database';
-import Athlete from '../models/Athlete';
+import { getModels } from '../shared';
+
+// Get shared models
+const { Athlete } = getModels();
 
 async function fixAthleteStatus() {
   try {

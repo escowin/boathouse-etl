@@ -1,10 +1,13 @@
 import dotenv from 'dotenv';
 import { Op } from 'sequelize';
-import { AuthService } from '../auth/authService';
-import Athlete from '../models/Athlete';
+import { getAuth, getModels } from '../shared';
 
 // Load environment variables
 dotenv.config();
+
+// Get shared resources
+const { AuthService } = getAuth();
+const { Athlete } = getModels();
 
 async function setDefaultPins() {
   console.log('🔐 Setting default PINs for existing athletes...');

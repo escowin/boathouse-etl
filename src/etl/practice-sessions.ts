@@ -6,7 +6,8 @@
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
 import { ETLProcessConfig, DataTransformationResult, ETLValidationResult } from './types';
-import { PracticeSession } from '../models';
+import { getModels } from '../shared';
+const { PracticeSession } = getModels();
 
 export class PracticeSessionsETL extends BaseETLProcess {
   private sheetsService: GoogleSheetsService;

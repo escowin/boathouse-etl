@@ -1,5 +1,8 @@
-import { sequelize } from '../models';
+import { getModels } from '../shared';
 import { QueryTypes } from 'sequelize';
+
+// Get shared models
+const { sequelize } = getModels();
 
 async function rollbackBoatTypeMigration() {
   try {

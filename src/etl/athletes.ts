@@ -4,7 +4,8 @@
 
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
-import { Athlete, UsraCategory } from '../models';
+import { getModels } from '../shared';
+const { Athlete, UsraCategory } = getModels();
 import { Op } from 'sequelize';
 import { 
   ETLProcessConfig, 

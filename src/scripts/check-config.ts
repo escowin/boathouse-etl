@@ -5,7 +5,10 @@
  * Usage: npm run check:config
  */
 
-import { env } from '../config/env';
+import { getConfig } from '../shared';
+
+// Get shared config
+const { env } = getConfig();
 
 function checkConfiguration() {
   console.log('🔍 Checking configuration...\n');

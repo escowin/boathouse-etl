@@ -5,7 +5,8 @@
 
 import { BaseETLProcess } from './base-etl';
 import { ETLProcessConfig, DataTransformationResult, ETLValidationResult } from './types';
-import { Team } from '../models';
+import { getModels } from '../shared';
+const { Team } = getModels();
 
 export class TeamsETL extends BaseETLProcess {
   constructor(config: Partial<ETLProcessConfig> = {}) {

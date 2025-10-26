@@ -3,8 +3,11 @@
  * Removes all attendance records to start fresh
  */
 
-import sequelize from '../config/database';
-import { Attendance } from '../models';
+import { getModels, getConfig } from '../shared';
+
+// Get shared resources
+const { Attendance } = getModels();
+const { database: sequelize } = getConfig();
 
 async function clearAttendanceTable() {
   try {

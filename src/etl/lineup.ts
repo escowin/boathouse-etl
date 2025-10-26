@@ -1,5 +1,6 @@
 import { BaseETLProcess } from './base-etl';
-import { Attendance, Athlete, Boat, PracticeSession, Lineup } from '../models';
+import { getModels } from '../shared';
+const { Attendance, Athlete, Boat, PracticeSession, Lineup } = getModels();
 import { ETLProcessConfig, ETLValidationResult } from './types';
 
 export class LineupETL extends BaseETLProcess {

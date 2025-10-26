@@ -8,7 +8,10 @@
 
 import { DatabaseUtils } from '../utils/database';
 import { Op } from 'sequelize';
-import PracticeSession from '../models/PracticeSession';
+import { getModels } from '../shared';
+
+// Get shared models
+const { PracticeSession } = getModels();
 
 interface PracticeSessionData {
   team_id: number;
@@ -59,7 +62,7 @@ async function seedPracticeSessions() {
       }
     });
 
-    const existingDates = new Set(existingSessions.map(session => session.date.toISOString().split('T')[0]));
+    const existingDates = new Set(existingSessions.map((session: any) => session.date.toISOString().split('T')[0]));
     console.log(`🔍 Found ${existingSessions.length} existing sessions`);
 
     // Filter out existing dates

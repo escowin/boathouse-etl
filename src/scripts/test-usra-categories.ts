@@ -3,8 +3,11 @@
  * This script tests the new athlete service with USRA category joins
  */
 
-import { athleteService } from '../services';
-import { Athlete, UsraCategory } from '../models';
+import { getServices, getModels } from '../shared';
+
+// Get shared resources
+const { athleteService } = getServices();
+const { Athlete, UsraCategory } = getModels();
 
 async function testUsraCategoryResolution() {
   console.log('🧪 Testing USRA Category Resolution');
@@ -32,7 +35,7 @@ async function testUsraCategoryResolution() {
     console.log(`✅ Found ${allAthletes.length} total athletes`);
     
     // Analyze USRA category distribution
-    const categoryStats = allAthletes.reduce((stats, athlete) => {
+    const categoryStats = allAthletes.reduce((stats: Record<string, number>, athlete: any) => {
       const category = athlete.usra_age_category || 'No Category';
       stats[category] = (stats[category] || 0) + 1;
       return stats;
@@ -81,7 +84,7 @@ async function testUsraCategoryResolution() {
     });
 
     console.log(`✅ Found ${athletesWithRelations.length} athletes with relationships`);
-    athletesWithRelations.forEach((athlete, index) => {
+    athletesWithRelations.forEach((athlete: any, index: number) => {
       const athleteData = athlete.toJSON() as any;
       console.log(`   ${index + 1}. ${athleteData.name}: ${athleteData.usra_age_category?.category || 'No category'}`);
     });
@@ -91,8 +94,8 @@ async function testUsraCategoryResolution() {
     console.log(`   - Total athletes: ${allAthletes.length}`);
     console.log(`   - IndexedDB athletes: ${indexedDbAthletes.length}`);
     console.log(`   - Active competitive athletes: ${activeAthletes.length}`);
-    console.log(`   - Athletes with USRA categories: ${allAthletes.filter(a => a.usra_age_category).length}`);
-    console.log(`   - Athletes without USRA categories: ${allAthletes.filter(a => !a.usra_age_category).length}`);
+    console.log(`   - Athletes with USRA categories: ${allAthletes.filter((a: any) => a.usra_age_category).length}`);
+    console.log(`   - Athletes without USRA categories: ${allAthletes.filter((a: any) => !a.usra_age_category).length}`);
 
   } catch (error) {
     console.error('❌ Test failed:', error);

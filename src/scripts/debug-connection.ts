@@ -5,7 +5,10 @@
  * Usage: npm run debug:connection
  */
 
-import { env } from '../config/env';
+import { getConfig } from '../shared';
+
+// Get shared config
+const { env } = getConfig();
 
 function debugConnection() {
   console.log('🔍 Debugging database connection...\n');

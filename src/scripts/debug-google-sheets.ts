@@ -6,8 +6,11 @@
  */
 
 import { google } from 'googleapis';
-import { env } from '../config/env';
+import { getConfig } from '../shared';
 import { DatabaseUtils } from '../utils/database';
+
+// Get shared config
+const { env } = getConfig();
 
 async function debugGoogleSheets() {
   const sheetName = process.argv[2] || 'Rowers';

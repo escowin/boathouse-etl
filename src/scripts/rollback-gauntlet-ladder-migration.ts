@@ -1,4 +1,7 @@
-import { sequelize } from '../models';
+import { getModels } from '../shared';
+
+// Get shared models
+const { sequelize } = getModels();
 
 async function rollbackGauntletLadderMigration() {
   try {

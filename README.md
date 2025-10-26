@@ -1,16 +1,16 @@
 # Boathouse-ETL
 
-A comprehensive data management and ETL (Extract, Transform, Load) system designed to modernize rowing club operations by replacing spreadsheet dependencies with a centralized, scalable database solution.
+A specialized ETL (Extract, Transform, Load) service designed to modernize rowing club operations by replacing spreadsheet dependencies with a centralized, scalable database solution. This service focuses purely on data processing and synchronization.
 
 ## 🎯 Project Goals
 
-This project was created to address the challenges of managing a rowing club's data across multiple disconnected systems:
+This ETL service was created to address the challenges of data management in rowing club operations:
 
 - **Replace Spreadsheet Dependencies**: Eliminate reliance on various Google Sheets and Excel files
-- **Centralize Communications**: Consolidate decentralized communication channels
-- **Improve Statistics Recording**: Create a robust system for tracking athlete performance and progress
-- **Support Coaching Applications**: Provide data infrastructure for coaching and athlete management tools
-- **Enable Competitive Systems**: Implement Gauntlet and Ladder systems for athlete ranking and challenges
+- **Automate Data Synchronization**: Scheduled data extraction and processing
+- **Ensure Data Quality**: Comprehensive data validation and error handling
+- **Maintain Data Consistency**: Standardized data formats across all systems
+- **Support Data Infrastructure**: Provide clean, structured data for other applications
 
 ## 🏗️ Architecture Overview
 
@@ -21,45 +21,46 @@ This project was created to address the challenges of managing a rowing club's d
 - **Data Transformation**: Clean, validate, and standardize data formats
 - **Database Loading**: Populate PostgreSQL database with structured data
 - **Scheduled Processing**: Automated ETL jobs for regular data updates
+- **Error Handling**: Comprehensive retry logic and error reporting
 
-#### 2. **Database Schema**
-- **Athletes & Teams**: Comprehensive athlete and team management
-- **Boats & Equipment**: Boat inventory with standardized type notation (1x, 2x, 2-, 4x, 4+, 8+)
-- **Practice Sessions**: Track practice attendance and participation
-- **Lineups & Seat Assignments**: Detailed lineup management with seat assignments
-- **Regattas & Races**: Competition tracking and results
-- **USRA Categories**: Age and weight category management
+#### 2. **Data Sources**
+- **Athlete Information**: Names, contact details, team assignments
+- **Boat Inventory**: Boat names, types, and specifications
+- **Practice Sessions**: Session dates, attendance, and notes
+- **Team Rosters**: Team compositions and member assignments
+- **USRA Categories**: Age and weight category classifications
+- **Attendance Records**: Practice session participation tracking
+- **Lineup Data**: Seat assignments and boat configurations
 
-#### 3. **Competitive Systems (Rowcalibur Integration)**
-- **Gauntlet System**: Individual athlete challenge and ranking system
-- **Ladder System**: Position-based ranking with progression tracking
-- **Match Records**: Detailed match history and statistics
-- **Seat Assignments**: Competitive lineup management
+#### 3. **Database Integration**
+- **PostgreSQL Database**: Central data repository (boathouse_trc)
+- **Sequelize ORM**: Database operations and migrations
+- **Data Validation**: Comprehensive data quality checks
+- **Migration System**: Schema updates and rollback capabilities
 
 ## 🚀 Features
 
-### Data Management
-- **Automated ETL**: Scheduled data extraction from Google Sheets
-- **Data Validation**: Comprehensive data quality checks and error handling
+### ETL Processing
+- **Automated Data Extraction**: Scheduled data extraction from Google Sheets
+- **Data Transformation**: Clean, validate, and standardize data formats
+- **Batch Processing**: Configurable batch sizes for optimal performance
+- **Error Handling**: Comprehensive retry logic and error reporting
+- **Data Validation**: Quality checks and data integrity verification
+
+### Data Sources
+- **Athlete Data**: Complete athlete profiles and information
+- **Team Data**: Team compositions and member assignments
+- **Boat Inventory**: Equipment catalog with standardized naming
+- **Practice Sessions**: Session scheduling and management data
+- **Attendance Records**: Practice participation tracking
+- **Lineup Data**: Seat assignments and boat configurations
+- **USRA Categories**: Age and weight classifications
+
+### Database Operations
 - **Migration System**: Database schema migrations with rollback capabilities
-- **Backup & Recovery**: Data integrity and recovery mechanisms
-
-### Athlete & Team Management
-- **Athlete Profiles**: Complete athlete information and history
-- **Team Memberships**: Flexible team assignment and management
-- **Attendance Tracking**: Practice session attendance and participation
-- **Performance Metrics**: Erg test results and performance tracking
-
-### Equipment Management
-- **Boat Inventory**: Complete boat catalog with standardized naming
-- **Seat Assignments**: Detailed lineup and seat management
-- **Equipment Tracking**: Maintenance and usage history
-
-### Competitive Features
-- **Gauntlet Challenges**: Individual athlete ranking challenges
-- **Ladder Rankings**: Position-based competitive system
-- **Match History**: Comprehensive match and result tracking
-- **Progress Analytics**: Performance trends and improvement tracking
+- **Data Integrity**: Comprehensive data validation and consistency checks
+- **Connection Management**: Efficient database connection pooling
+- **Transaction Safety**: Atomic operations for data consistency
 
 ## 🛠️ Technology Stack
 
@@ -76,6 +77,15 @@ boathouse-etl/
 ├── src/
 │   ├── config/           # Database and environment configuration
 │   ├── etl/              # ETL pipeline components
+│   │   ├── orchestrator.ts    # Main ETL orchestration
+│   │   ├── athletes.ts        # Athlete data processing
+│   │   ├── boats.ts           # Boat data processing
+│   │   ├── teams.ts           # Team data processing
+│   │   ├── practice-sessions.ts # Practice session processing
+│   │   ├── attendance.ts      # Attendance data processing
+│   │   ├── lineup.ts          # Lineup data processing
+│   │   ├── usra-categories.ts # USRA category processing
+│   │   └── google-sheets-service.ts # Google Sheets integration
 │   ├── models/           # Sequelize database models
 │   ├── migrations/       # Database migration files
 │   ├── scripts/          # Utility and migration scripts
@@ -124,12 +134,6 @@ boathouse-etl/
 
 ## 📋 Available Scripts
 
-### Database Setup
-- `npm run setup` - Complete database setup (all migrations)
-- `npm run setup:rollback` - Rollback complete database setup
-- `npm run migrate:up` - Run pending migrations
-- `npm run migrate:down` - Rollback last migration
-
 ### ETL Operations
 - `npm run etl` - Run ETL pipeline (default: full)
 - `npm run etl:full` - Full ETL with all data sources
@@ -140,21 +144,43 @@ boathouse-etl/
 - `npm run etl:practice-sessions` - Extract practice session data
 - `npm run etl:attendance` - Extract attendance data only
 - `npm run etl:lineup` - Extract lineup data only
+- `npm run etl:test` - Test ETL pipeline without database changes
+- `npm run etl:validate` - Validate data without processing
+- `npm run etl:status` - Check ETL job status
+
+### Database Setup
+- `npm run setup` - Complete database setup (all migrations)
+- `npm run setup:rollback` - Rollback complete database setup
+- `npm run migrate:up` - Run pending migrations
+- `npm run migrate:down` - Rollback last migration
+- `npm run migrate:status` - Check migration status
 
 ### Development
-- `npm run dev` - Start development server
+- `npm run dev` - Start ETL service
 - `npm run build` - Build TypeScript
 - `npm run test` - Run test suite
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
+### Configuration
+- `npm run validate:config` - Validate shared resource paths
+
 ## 🔧 Configuration
 
 ### Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string
-- `GOOGLE_SHEETS_CREDENTIALS` - Path to Google service account JSON
-- `GOOGLE_SHEETS_ID` - Google Sheets document ID
-- `LOG_LEVEL` - Logging level (debug, info, warn, error)
+- `DB_HOST` - PostgreSQL host
+- `DB_PORT` - PostgreSQL port
+- `DB_NAME` - Database name (boathouse_trc)
+- `DB_USER` - Database username
+- `DB_PASSWORD` - Database password
+- `DB_SSL` - SSL connection (true/false)
+- `GOOGLE_SHEETS_CREDENTIALS_PATH` - Path to Google service account JSON
+- `GOOGLE_SHEETS_SPREADSHEET_ID` - Google Sheets document ID
+- `ETL_BATCH_SIZE` - Batch size for processing (default: 100)
+- `ETL_RETRY_ATTEMPTS` - Number of retry attempts (default: 3)
+- `ETL_RETRY_DELAY_MS` - Delay between retries in milliseconds (default: 5000)
+- `ETL_LOG_LEVEL` - ETL logging level (debug, info, warn, error)
+- `LOG_LEVEL` - General logging level (debug, info, warn, error)
 
 ### Google Sheets Setup
 1. Create a Google Service Account
@@ -170,20 +196,58 @@ The ETL system integrates with various Google Sheets containing:
 - **Practice Sessions**: Session dates, attendance, and notes
 - **Team Rosters**: Team compositions and member assignments
 - **USRA Categories**: Age and weight category classifications
+- **Attendance Records**: Practice session participation tracking
+- **Lineup Data**: Seat assignments and boat configurations
 
-## 🏆 Competitive Systems
+## 🔄 ETL Process Flow
 
-### Gauntlet System
-- Individual athlete challenges and rankings
-- Match-based progression system
-- Detailed performance tracking
-- Personal ranking improvements
+1. **Extract**: Pull data from Google Sheets using API
+2. **Transform**: Clean, validate, and standardize data formats
+3. **Load**: Insert/update data in PostgreSQL database
+4. **Validate**: Verify data integrity and completeness
+5. **Report**: Generate status reports and error logs
 
-### Ladder System
-- Position-based competitive rankings
-- Automatic position updates based on match results
-- Historical progression tracking
-- Win/loss statistics and trends
+## 🏗️ Service Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Google Sheets  │    │  boathouse-etl  │    │  boathouse_trc  │
+│                 │    │                 │    │                 │
+│ 📊 Source Data  │───▶│ 🏭 ETL Service  │───▶│ 🏠 Database     │
+│ - Athletes      │    │ - Extract       │    │ - PostgreSQL    │
+│ - Boats         │    │ - Transform     │    │ - Centralized   │
+│ - Sessions      │    │ - Load          │    │ - Structured    │
+│ - Attendance    │    │ - Validate      │    │ - Consistent    │
+│ - Lineups       │    │ - Report        │    │ - Accessible    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │    crewhub      │
+                       │                 │
+                       │ 🌐 API Server   │
+                       │ - Authentication│
+                       │ - Data Access   │
+                       │ - Applications  │
+                       └─────────────────┘
+                                ▲
+                                │
+                       ┌─────────────────┐
+                       │  Shared Models  │
+                       │  & Config       │
+                       │  (via config.json)│
+                       └─────────────────┘
+```
+
+### 🔗 **Shared Resource Integration**
+
+Boathouse-ETL uses a config.json approach to share resources with CrewHub:
+
+- **Shared Models**: Database models loaded from `../crewhub/src/models`
+- **Shared Config**: Environment and database config from `../crewhub/src/config`
+- **Module Proxy**: `src/shared/index.ts` handles dynamic path resolution
+- **No Duplication**: Always uses latest shared resources
+- **Service Optimization**: ETL-optimized database configuration
 
 ## 🔄 Data Flow
 
@@ -195,43 +259,41 @@ The ETL system integrates with various Google Sheets containing:
 
 ## 📈 Benefits
 
-### For Coaches
-- **Centralized Data**: All athlete and team information in one place
-- **Real-time Updates**: Automatic data synchronization
-- **Performance Analytics**: Comprehensive performance tracking
-- **Lineup Management**: Easy lineup creation and seat assignment
+### For Data Management
+- **Automated Processing**: Eliminates manual data entry and synchronization
+- **Data Quality**: Comprehensive validation and error handling
+- **Consistency**: Standardized data formats across all systems
+- **Reliability**: Robust retry logic and error recovery
 
-### For Athletes
-- **Personal Progress**: Individual performance tracking
-- **Competitive Features**: Gauntlet and ladder systems
-- **Historical Data**: Complete performance history
-- **Goal Setting**: Data-driven improvement tracking
+### For System Integration
+- **Clean Data**: Structured, validated data for other applications
+- **Real-time Sync**: Regular data updates from source systems
+- **Scalability**: Handles growing data volumes efficiently
+- **Maintainability**: Clear separation of ETL and API concerns
 
-### For Club Management
-- **Reduced Manual Work**: Automated data processing
-- **Data Consistency**: Standardized data formats
-- **Scalability**: System grows with club needs
-- **Integration Ready**: API-ready for future applications
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes
-4. Add tests if applicable
-5. Submit a pull request
+### For Development
+- **Modular Design**: Focused ETL service with clear responsibilities
+- **Easy Debugging**: Comprehensive logging and error reporting
+- **Flexible Configuration**: Environment-based settings for different deployments
+- **Testing Support**: Built-in validation and testing capabilities
 
 ## 📝 License
 
-This project is licensed under the ISC License - see the LICENSE file for details.
+This is proprietary software. All rights reserved.
+
+**NO USE WITHOUT PERMISSION**: This software may not be used, copied, modified, distributed, or sold without explicit written permission from Edwin Escobar.
+
+For licensing inquiries, commercial use, or permission requests, contact:
+**Edwin Escobar**  
+Email: edwin@escowinart.com
+
+See LICENSE and LICENSING.md files for complete terms and conditions.
 
 ## 🆘 Support
 
-For questions, issues, or contributions, please:
+For questions, issues, or licensing inquiries, please:
 - Check the documentation in the `docs/` folder
-- Review existing issues
-- Create a new issue with detailed information
-- Contact the development team
+- Contact Edwin Escobar at edwin@escowinart.com
 
 ---
 

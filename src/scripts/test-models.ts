@@ -6,7 +6,10 @@
  */
 
 import { DatabaseUtils } from '../utils/database';
-import { 
+import { getModels } from '../shared';
+
+// Get shared models
+const { 
   Athlete, 
   Team, 
   Boat, 
@@ -16,7 +19,7 @@ import {
   Lineup, 
   SeatAssignment, 
   ETLJob 
-} from '../models';
+} = getModels();
 
 async function testModels() {
   console.log('🔍 Testing Sequelize models...\n');

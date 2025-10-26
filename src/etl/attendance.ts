@@ -7,7 +7,8 @@
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
 import { ETLProcessConfig, DataTransformationResult, ETLValidationResult } from './types';
-import { Attendance, Athlete } from '../models';
+import { getModels } from '../shared';
+const { Attendance, Athlete } = getModels();
 
 export class AttendanceETL extends BaseETLProcess {
   private sheetsService: GoogleSheetsService;
@@ -102,7 +103,7 @@ export class AttendanceETL extends BaseETLProcess {
     
     // Create athlete map using name field
     const athleteMap = new Map<string, any>();
-    athletes.forEach(athlete => {
+    athletes.forEach((athlete: any) => {
       const name = athlete.getDataValue('name');
       if (name) {
         athleteMap.set(name.toLowerCase(), athlete);
@@ -113,7 +114,7 @@ export class AttendanceETL extends BaseETLProcess {
     console.log(`📊 First few athlete map keys:`, Array.from(athleteMap.keys()).slice(0, 5));
 
     console.log(`📊 Found ${athletes.length} athletes in database`);
-    console.log(`📊 Athlete names in database:`, athletes.slice(0, 5).map(a => a.getDataValue('name')));
+    console.log(`📊 Athlete names in database:`, athletes.slice(0, 5).map((a: any) => a.getDataValue('name')));
     console.log(`📊 First athlete object:`, JSON.stringify(athletes[0], null, 2));
 
     // Process coxswains (rows 6-14)

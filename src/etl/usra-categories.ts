@@ -5,7 +5,8 @@
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
 import { GoogleSheetsRow, DataTransformationResult, ETLValidationResult, ETLProcessConfig } from './types';
-import { UsraCategory } from '../models';
+import { getModels } from '../shared';
+const { UsraCategory } = getModels();
 
 export class UsraCategoriesETL extends BaseETLProcess {
   private sheetsService: GoogleSheetsService;
