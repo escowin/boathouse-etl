@@ -1,7 +1,18 @@
 import { Sequelize } from 'sequelize';
-import { getConfig } from '../shared';
-const config = getConfig();
-const { env } = config;
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from boathouse-etl's .env
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const env = {
+  DB_HOST: process.env['DB_HOST'] || 'localhost',
+  DB_PORT: parseInt(process.env['DB_PORT'] || '5432', 10),
+  DB_NAME: process.env['DB_NAME'] || 'boathouse_trc',
+  DB_USER: process.env['DB_USER'] || 'postgres',
+  DB_PASSWORD: process.env['DB_PASSWORD'] || '',
+  NODE_ENV: process.env['NODE_ENV'] || 'development'
+};
 
 // ETL-optimized database configuration interface
 interface ETLDatabaseConfig {
@@ -37,7 +48,7 @@ const etlConfig: ETLDatabaseConfig = {
   port: env.DB_PORT,
   database: env.DB_NAME,
   username: env.DB_USER,
-  password: env.DB_PASSWORD,
+  password: env.DB_PASSWORD ? String(env.DB_PASSWORD) : '',
   dialect: 'postgres',
   logging: env.NODE_ENV === 'development' ? console.log : false,
   // ETL-optimized connection pool (smaller, longer timeouts for bulk operations)
