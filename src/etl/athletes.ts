@@ -162,10 +162,10 @@ export class AthletesETL extends BaseETLProcess {
       athlete.birth_year = this.parseInteger(row[columnIndices.birthYearCol]);
     }
     if (columnIndices.sweepScullCol !== -1 && row[columnIndices.sweepScullCol]) {
-      athlete.sweep_scull = this.normalizeSweepScull(String(row[columnIndices.sweepScullCol]).trim());
+      athlete.discipline = this.normalizeSweepScull(String(row[columnIndices.sweepScullCol]).trim());
     }
     if (columnIndices.portStarboardCol !== -1 && row[columnIndices.portStarboardCol]) {
-      athlete.port_starboard = this.normalizePortStarboard(String(row[columnIndices.portStarboardCol]).trim());
+      athlete.side = this.normalizePortStarboard(String(row[columnIndices.portStarboardCol]).trim());
     }
     if (columnIndices.coxCol !== -1 && row[columnIndices.coxCol]) {
       athlete.cox_capability = this.normalizeCoxCapability(String(row[columnIndices.coxCol]).trim());

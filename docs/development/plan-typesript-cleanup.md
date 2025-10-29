@@ -21,8 +21,8 @@ This document outlines a comprehensive plan to ensure type consistency between b
 ### **Primary Issues Identified** ✅ RESOLVED
 
 1. **Interface Naming Inconsistencies**: ✅ RESOLVED
-   - `AthleteWithUsraData` interface now uses `snake_case` (e.g., `birth_year`, `port_starboard`, `sweep_scull`)
-   - Database models use `snake_case` (e.g., `birth_year`, `port_starboard`, `sweep_scull`)
+   - `AthleteWithUsraData` interface now uses `snake_case` (e.g., `birth_year`, `side`, `discipline`)
+   - Database models use `snake_case` (e.g., `birth_year`, `side`, `discipline`)
    - API responses now use consistent `snake_case` conventions
 
 2. **Service Layer Inconsistencies**: ✅ RESOLVED
@@ -144,8 +144,8 @@ export interface AthleteWithUsraData {
   gender?: 'M' | 'F';
   age?: number | undefined;
   birthYear?: number | string;           // ❌ Should be birth_year
-  portStarboard?: 'Starboard' | ...;     // ❌ Should be port_starboard
-  sweepScull?: 'Sweep' | ...;            // ❌ Should be sweep_scull
+  portStarboard?: 'Starboard' | ...;     // ❌ Should be side
+  sweepScull?: 'Sweep' | ...;            // ❌ Should be discipline
   usraAgeCategory?: string;              // ❌ Should be usra_age_category
   weightKg?: number | string;            // ❌ Should be weight_kg
   heightCm?: number | string;            // ❌ Should be height_cm
@@ -168,8 +168,8 @@ export interface AthleteWithUsraData {
   gender?: 'M' | 'F';
   age?: number | undefined;
   birth_year?: number | string;          // ✅ snake_case
-  port_starboard?: 'Starboard' | ...;    // ✅ snake_case
-  sweep_scull?: 'Sweep' | ...;           // ✅ snake_case
+  side?: 'Starboard' | ...;    // ✅ snake_case
+  discipline?: 'Sweep' | ...;           // ✅ snake_case
   usra_age_category?: string;            // ✅ snake_case
   weight_kg?: number | string;           // ✅ snake_case
   height_cm?: number | string;           // ✅ snake_case
@@ -192,7 +192,7 @@ async getAthletesForIndexedDB(): Promise<AthleteWithUsraData[]> {
     id: athlete.athlete_id,
     name: athlete.name,
     birthYear: athlete.birth_year,        // ❌ pascalCase
-    portStarboard: athlete.port_starboard, // ❌ pascalCase
+    portStarboard: athlete.side, // ❌ pascalCase
     // ... other fields
   }));
 }
@@ -206,7 +206,7 @@ async getAthletesForIndexedDB(): Promise<AthleteWithUsraData[]> {
     athlete_id: athlete.athlete_id,      // ✅ snake_case
     name: athlete.name,
     birth_year: athlete.birth_year,      // ✅ snake_case
-    port_starboard: athlete.port_starboard, // ✅ snake_case
+    side: athlete.side, // ✅ snake_case
     // ... other fields
   }));
 }
