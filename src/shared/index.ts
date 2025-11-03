@@ -36,6 +36,9 @@ const sharedModules = {
     if (config.shared.config.env?.enabled) {
       const envPath = path.resolve(__dirname, '..', '..', config.shared.config.env.path);
       configModules.env = require(envPath);
+    } else {
+      // Fallback to process.env when shared env config is disabled
+      configModules.env = process.env;
     }
     
     // Load database config
