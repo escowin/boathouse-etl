@@ -164,12 +164,12 @@ async function connectDatabase(config: ReturnType<typeof getDatabaseConfig>, lab
 
 async function getTableData(sequelize: Sequelize, tableName: string): Promise<any[]> {
   const queryInterface = sequelize.getQueryInterface();
-  const [results] = await sequelize.query(
-    `SELECT * FROM ${queryInterface.quoteTable(tableName)}`,
+  const results = await sequelize.query(
+    `SELECT * FROM ${queryInterface.quoteIdentifier(tableName)}`,
     { type: QueryTypes.SELECT }
-  ) as [any[]];
+  ) as any[];
   
-  return results || [];
+  return Array.isArray(results) ? results : [];
 }
 
 async function clearTable(sequelize: Sequelize, tableName: string, dryRun: boolean): Promise<void> {
@@ -181,7 +181,7 @@ async function clearTable(sequelize: Sequelize, tableName: string, dryRun: boole
   // Use TRUNCATE CASCADE to handle foreign keys
   const queryInterface = sequelize.getQueryInterface();
   await sequelize.query(
-    `TRUNCATE TABLE ${queryInterface.quoteTable(tableName)} CASCADE`,
+    `TRUNCATE TABLE ${queryInterface.quoteIdentifier(tableName)} CASCADE`,
     { type: QueryTypes.RAW }
   );
 }
@@ -203,7 +203,7 @@ async function insertTableData(
   
   const columns = Object.keys(data[0]);
   const queryInterface = sequelize.getQueryInterface();
-  const quotedTable = queryInterface.quoteTable(tableName);
+  const quotedTable = queryInterface.quoteIdentifier(tableName);
   const quotedColumns = columns.map(col => queryInterface.quoteIdentifier(col));
   
   // Build batch insert queries (PostgreSQL allows up to 65535 parameters, but we'll use 1000 for safety)
@@ -244,9 +244,13 @@ async function insertTableData(
 async function getTableRowCount(sequelize: Sequelize, tableName: string): Promise<number> {
   const queryInterface = sequelize.getQueryInterface();
   const results = await sequelize.query(
-    `SELECT COUNT(*) as count FROM ${queryInterface.quoteTable(tableName)}`,
+    `SELECT COUNT(*) as count FROM ${queryInterface.quoteIdentifier(tableName)}`,
     { type: QueryTypes.SELECT }
   ) as Array<{ count: string | number }>;
+  
+  if (!Array.isArray(results) || results.length === 0) {
+    return 0;
+  }
   
   const count = results[0]?.count;
   return typeof count === 'number' ? count : parseInt(String(count || '0'), 10);
