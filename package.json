@@ -39,6 +39,7 @@
     "seed:mailing-lists": "ts-node src/scripts/seed-mailing-lists.ts",
     "seed:practice-sessions": "ts-node src/scripts/seed-practice-sessions.ts",
     "seed:team-memberships": "ts-node src/scripts/seed-team-memberships.ts",
+    "seed:production": "ts-node src/scripts/seed-production-from-dev.ts",
     "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
     "test:models": "ts-node src/scripts/test-models.ts",
     "test:sheets-data": "ts-node src/scripts/test-google-sheets-data.ts",
