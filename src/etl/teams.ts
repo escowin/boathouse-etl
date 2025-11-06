@@ -56,6 +56,11 @@ export class TeamsETL extends BaseETLProcess {
         description: "Intermediate Crew",
       },
       {
+        name: "Quicksilvers",
+        team_type: "Masters",
+        description: "Quicksilvers Crew",
+      },
+      {
         name: "Boys Varsity",
         team_type: "Youth",
         description: "Boys Varsity Crew",

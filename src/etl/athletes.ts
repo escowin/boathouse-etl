@@ -2,6 +2,7 @@
  * Athletes ETL Process
  */
 
+import { randomUUID } from 'crypto';
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
 import { getModels } from '../shared';
@@ -87,6 +88,7 @@ export class AthletesETL extends BaseETLProcess {
     const emergencyContactPhoneCol = this.findColumnIndex(headerArray, ['Emergency Contact #', 'Emergency Contact Phone']);
     const coxCol = this.findColumnIndex(headerArray, ['Cox?']);
     const bowInDarkCol = this.findColumnIndex(headerArray, ['Bow in Dark?']);
+    const activeCol = this.findColumnIndex(headerArray, ['Active', 'Active?']);
 
     // Debug: Log what columns were found
     console.log(`🔍 Column detection results:`);
@@ -95,6 +97,7 @@ export class AthletesETL extends BaseETLProcess {
     console.log(`  weightCol: ${weightCol}, emailCol: ${emailCol}, phoneCol: ${phoneCol}`);
     console.log(`  experienceCol: ${experienceCol}, birthYearCol: ${birthYearCol}`);
     console.log(`  coxCol: ${coxCol}, bowInDarkCol: ${bowInDarkCol}`);
+    console.log(`  activeCol: ${activeCol}`);
 
     // Process each row starting from row 2 (index 1)
     for (let i = 1; i < data.length; i++) {
@@ -107,7 +110,8 @@ export class AthletesETL extends BaseETLProcess {
         const athlete = await this.transformAthleteRow(rowArray, {
           nameCol, typeCol, genderCol, sweepScullCol, portStarboardCol, weightCol,
           emailCol, phoneCol, experienceCol, birthYearCol, usRowingNumberCol,
-          emergencyContactCol, emergencyContactPhoneCol, coxCol, bowInDarkCol
+          emergencyContactCol, emergencyContactPhoneCol, coxCol, bowInDarkCol,
+          activeCol
         });
         
         if (athlete) {
@@ -200,6 +204,13 @@ export class AthletesETL extends BaseETLProcess {
       athlete.usra_age_category_id = await this.findUsraCategoryForAge(currentAge);
     }
 
+    // Parse active status from Google Sheets
+    if (columnIndices.activeCol !== -1 && row[columnIndices.activeCol] !== undefined && row[columnIndices.activeCol] !== null && String(row[columnIndices.activeCol]).trim() !== '') {
+      // Active column exists and has a value - parse and use it
+      athlete.active = this.parseActive(String(row[columnIndices.activeCol]).trim());
+    }
+    // If no Active column exists, don't set active (will preserve existing value in database during update, or use schema default for new records)
+
     // ETL metadata
     athlete.etl_source = 'google_sheets';
     athlete.etl_last_sync = new Date();
@@ -271,15 +282,21 @@ export class AthletesETL extends BaseETLProcess {
           });
 
           if (existingAthlete) {
-            // Update existing athlete
-            await existingAthlete.update({
-              ...athleteData,
-              updated_at: new Date()
-            });
+            // Update existing athlete - only include fields that are explicitly set (not undefined)
+            const updateData: any = { updated_at: new Date() };
+            for (const [key, value] of Object.entries(athleteData)) {
+              if (value !== undefined) {
+                updateData[key] = value;
+              }
+            }
+            await existingAthlete.update(updateData);
             recordsUpdated++;
           } else {
-            // Create new athlete
-            await Athlete.create(athleteData);
+            // Create new athlete with UUIDv4
+            await Athlete.create({
+              ...athleteData,
+              athlete_id: randomUUID()
+            });
             recordsCreated++;
           }
         } catch (error) {
@@ -412,6 +429,26 @@ export class AthletesETL extends BaseETLProcess {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  /**
+   * Parse active status from various formats
+   */
+  private parseActive(value: string): boolean {
+    const normalized = value.toLowerCase().trim();
+    
+    // True values
+    if (normalized === 'true' || normalized === 'yes' || normalized === 'y' || normalized === '1' || normalized === 'active') {
+      return true;
+    }
+    
+    // False values
+    if (normalized === 'false' || normalized === 'no' || normalized === 'n' || normalized === '0' || normalized === 'inactive') {
+      return false;
+    }
+    
+    // Default to true if unclear
+    return true;
   }
 
   /**

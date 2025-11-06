@@ -4,11 +4,12 @@
  * Maps attendance statuses and tracks athlete activity
  */
 
+import { randomUUID } from 'crypto';
 import { BaseETLProcess } from './base-etl';
 import { GoogleSheetsService } from './google-sheets-service';
 import { ETLProcessConfig, DataTransformationResult, ETLValidationResult } from './types';
 import { getModels } from '../shared';
-const { Attendance, Athlete } = getModels();
+const { Attendance, Athlete, PracticeSession } = getModels();
 
 export class AttendanceETL extends BaseETLProcess {
   private sheetsService: GoogleSheetsService;
@@ -35,7 +36,7 @@ export class AttendanceETL extends BaseETLProcess {
    * Extract Attendance data from Google Sheets
    * Sheet structure: Rows = Athletes, Columns = Practice Sessions
    * A6:A14 = Coxswains, A16:A141 = Rowers
-   * E2:GI4 = Practice session headers (dates/times)
+   * E2:HY4 = Practice session headers (dates/times)
    */
   protected async extract(): Promise<any[]> {
     console.log(`📊 Extracting attendance data from sheet: ${this.config.sheetName}`);
@@ -43,9 +44,9 @@ export class AttendanceETL extends BaseETLProcess {
     const data = await this.retry(async () => {
       // Get the full attendance data range (athletes + their attendance across all practice sessions)
       const [coxswainsResponse, rowersResponse, sessionResponse] = await Promise.all([
-        this.sheetsService.getRawSheetData(this.config.sheetName, 'A6:GI14'), // Coxswains with attendance
-        this.sheetsService.getRawSheetData(this.config.sheetName, 'A16:GI141'), // Rowers with attendance  
-        this.sheetsService.getRawSheetData(this.config.sheetName, 'E2:GI4') // Practice session headers
+        this.sheetsService.getRawSheetData(this.config.sheetName, 'A6:HY14'), // Coxswains with attendance
+        this.sheetsService.getRawSheetData(this.config.sheetName, 'A16:HY141'), // Rowers with attendance  
+        this.sheetsService.getRawSheetData(this.config.sheetName, 'E2:HY4') // Practice session headers
       ]);
 
       const coxswainsData = coxswainsResponse.data.values || [];
@@ -96,6 +97,9 @@ export class AttendanceETL extends BaseETLProcess {
     // Extract practice sessions from session headers (same logic as PracticeSessionsETL)
     const practiceSessions = await this.extractPracticeSessions(sessionHeaders);
     
+    // Look up actual session_id values from database for each practice session
+    const practiceSessionMap = await this.buildPracticeSessionMap(practiceSessions);
+    
     // Get all athletes from database
     const athletes = await Athlete.findAll({
       where: { active: true }
@@ -118,10 +122,10 @@ export class AttendanceETL extends BaseETLProcess {
     console.log(`📊 First athlete object:`, JSON.stringify(athletes[0], null, 2));
 
     // Process coxswains (rows 6-14)
-    await this.processAthleteRows(coxswainsData, practiceSessions, athleteMap, transformedData, errors, warnings, 6);
+    await this.processAthleteRows(coxswainsData, practiceSessions, practiceSessionMap, athleteMap, transformedData, errors, warnings, 6);
     
     // Process rowers (rows 16-141)
-    await this.processAthleteRows(rowersData, practiceSessions, athleteMap, transformedData, errors, warnings, 16);
+    await this.processAthleteRows(rowersData, practiceSessions, practiceSessionMap, athleteMap, transformedData, errors, warnings, 16);
 
     console.log(`✅ Transformed ${transformedData.length} attendance records`);
     if (errors.length > 0) {
@@ -150,6 +154,83 @@ export class AttendanceETL extends BaseETLProcess {
   }
 
   /**
+   * Build a map from (date, start_time) to actual session_id from database
+   */
+  private async buildPracticeSessionMap(practiceSessions: any[]): Promise<Map<string, number>> {
+    const sessionMap = new Map<string, number>();
+    
+    // Get all practice sessions from database
+    const dbSessions = await PracticeSession.findAll({
+      attributes: ['session_id', 'date', 'start_time']
+    });
+    
+    // Create map: key = "date|start_time", value = session_id
+    dbSessions.forEach((session: any) => {
+      const date = session.getDataValue('date');
+      const startTime = session.getDataValue('start_time');
+      if (date && startTime) {
+        // Normalize time format for matching
+        const normalizedTime = this.normalizeTime(startTime);
+        const key = `${date}|${normalizedTime}`;
+        sessionMap.set(key, session.getDataValue('session_id'));
+      }
+    });
+    
+    // Also try to match practice sessions from Google Sheets
+    for (const session of practiceSessions) {
+      const key = `${session.date}|${this.normalizeTime(session.start_time)}`;
+      if (!sessionMap.has(key)) {
+        // Try to find by date only (fallback)
+        for (const dbSession of dbSessions) {
+          const dbDate = dbSession.getDataValue('date');
+          if (dbDate === session.date) {
+            const dbStartTime = dbSession.getDataValue('start_time');
+            const normalizedDbTime = this.normalizeTime(dbStartTime);
+            const normalizedSheetTime = this.normalizeTime(session.start_time);
+            if (normalizedDbTime === normalizedSheetTime) {
+              sessionMap.set(key, dbSession.getDataValue('session_id'));
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    console.log(`📊 Built practice session map with ${sessionMap.size} entries`);
+    return sessionMap;
+  }
+
+  /**
+   * Normalize time format for matching (e.g., "6:15 AM" -> "06:15:00")
+   */
+  private normalizeTime(timeStr: string): string {
+    if (!timeStr) return '';
+    
+    // If already in HH:MM:SS format, return as is
+    if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
+      return timeStr;
+    }
+    
+    // Parse time formats like "6:15 AM", "6:15PM", etc.
+    const match = String(timeStr).trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match && match[1] && match[2] && match[3]) {
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const ampm = match[3].toUpperCase();
+      
+      if (ampm === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (ampm === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      return `${String(hours).padStart(2, '0')}:${minutes}:00`;
+    }
+    
+    return timeStr;
+  }
+
+  /**
    * Process athlete rows (either coxswains or rowers)
    * Each row represents one athlete, columns represent practice sessions
    * Filters out athletes with no responses to prevent table bloat
@@ -158,6 +239,7 @@ export class AttendanceETL extends BaseETLProcess {
   private async processAthleteRows(
     athleteRows: any[][],
     practiceSessions: any[],
+    practiceSessionMap: Map<string, number>,
     athleteMap: Map<string, any>,
     transformedData: any[],
     errors: string[],
@@ -246,9 +328,18 @@ export class AttendanceETL extends BaseETLProcess {
         const attendanceCell = athleteRow[colIndex + 4]; // Offset by 4 for columns A-D
 
         try {
+          // Look up actual session_id from database
+          const sessionKey = `${session.date}|${this.normalizeTime(session.start_time)}`;
+          const actualSessionId = practiceSessionMap.get(sessionKey);
+          
+          if (!actualSessionId) {
+            warnings.push(`Session ${session.date} ${session.start_time} not found in database - skipping attendance record`);
+            continue;
+          }
+
           const attendanceRecord = this.transformAttendanceRecord(
             athlete,
-            session,
+            { ...session, session_id: actualSessionId },
             attendanceCell
           );
 
@@ -321,14 +412,14 @@ export class AttendanceETL extends BaseETLProcess {
   /**
    * Extract practice sessions from session header rows
    * Uses sequential mapping: each column corresponds to session_id (1, 2, 3, etc.)
-   * Skips column GI due to #VALUE! error (same as Practice Sessions ETL)
+   * Skips columns with #VALUE! errors (same as Practice Sessions ETL)
    */
   private async extractPracticeSessions(sessionRows: any[]): Promise<any[]> {
     const sessions: any[] = [];
     
-    const dateRow = sessionRows[0];    // E2:GI2 (dates like "January 1")
-    const timeRow = sessionRows[1];    // E3:GI3 (times like "6:15 AM") 
-    const datetimeRow = sessionRows[2]; // E4:GI4 (datetime like "1/1/2025 6:15:00")
+    const dateRow = sessionRows[0];    // E2:HY2 (dates like "January 1")
+    const timeRow = sessionRows[1];    // E3:HY3 (times like "6:15 AM") 
+    const datetimeRow = sessionRows[2]; // E4:HY4 (datetime like "1/1/2025 6:15:00")
 
     const maxLength = Math.max(
       dateRow ? dateRow.length : 0,
@@ -338,9 +429,9 @@ export class AttendanceETL extends BaseETLProcess {
     let sessionIdCounter = 1; // Start from 1 (matches auto-incrementing session_id)
     
     for (let colIndex = 0; colIndex < maxLength; colIndex++) {
-      // Skip column GI (same logic as Practice Sessions ETL)
+      // Skip columns with #VALUE! errors (same logic as Practice Sessions ETL)
       if (datetimeRow && datetimeRow[colIndex] === '#VALUE!') {
-        console.log(`⏭️  Skipping column ${colIndex} (GI) due to #VALUE! error in datetime cell`);
+        console.log(`⏭️  Skipping column ${colIndex} due to #VALUE! error in datetime cell`);
         continue;
       }
       
@@ -670,6 +761,7 @@ export class AttendanceETL extends BaseETLProcess {
               athlete_id: attendanceData.athlete_id
             },
             defaults: {
+              attendance_id: randomUUID(),
               session_id: attendanceData.session_id,
               athlete_id: attendanceData.athlete_id,
               status: attendanceData.status,

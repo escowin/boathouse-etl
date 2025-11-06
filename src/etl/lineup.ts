@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { BaseETLProcess } from './base-etl';
 import { getModels } from '../shared';
 const { Attendance, Athlete, Boat, PracticeSession, Lineup } = getModels();
@@ -441,6 +442,7 @@ export class LineupETL extends BaseETLProcess {
               boat_id: lineupData.boat_id
             },
             defaults: {
+              lineup_id: randomUUID(),
               session_id: lineupData.session_id,
               boat_id: lineupData.boat_id,
               team_id: lineupData.team_id,
@@ -456,6 +458,11 @@ export class LineupETL extends BaseETLProcess {
           });
 
           if (!created) {
+            // Fix existing records with null lineup_id (should not happen but safety check)
+            if (!lineup.lineup_id || lineup.lineup_id === null) {
+              await lineup.update({ lineup_id: randomUUID() });
+            }
+            
             // Update existing lineup record if needed
             const needsUpdate = 
               lineup.lineup_name !== lineupData.lineup_name ||
@@ -487,7 +494,14 @@ export class LineupETL extends BaseETLProcess {
             data: lineupData,
             error: errorMessage
           });
-          console.error(`❌ Failed to load lineup record:`, error);
+          
+          // Check if it's a lineup_id null error - this should not happen with our fix
+          if (errorMessage.includes('lineup_id cannot be null')) {
+            console.error(`❌ CRITICAL: lineup_id is null even though UUID should have been generated!`);
+            console.error(`   Data:`, JSON.stringify({ session_id: lineupData.session_id, boat_id: lineupData.boat_id }, null, 2));
+          } else {
+            console.error(`❌ Failed to load lineup record:`, error);
+          }
         }
       }
     });

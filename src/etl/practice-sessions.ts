@@ -32,14 +32,14 @@ export class PracticeSessionsETL extends BaseETLProcess {
 
   /**
    * Extract Practice Sessions data from Google Sheets
-   * Uses E4:GI4 (datetime) as primary source with fallback to E2:GI2 + E3:GI3
+   * Uses E2:HY4 (datetime) as primary source with fallback to E2:HY2 + E3:HY3
    */
   protected async extract(): Promise<any[]> {
     console.log(`📊 Extracting practice sessions data from sheet: ${this.config.sheetName}`);
     
     const data = await this.retry(async () => {
       // Get raw data without header processing for practice sessions
-      const response = await this.sheetsService.getRawSheetData(this.config.sheetName, 'E2:GI4');
+      const response = await this.sheetsService.getRawSheetData(this.config.sheetName, 'E2:HY4');
 
       const rows = response.data.values || [];
       console.log(`✅ Retrieved ${rows.length} raw rows from ${this.config.sheetName}`);
@@ -168,12 +168,19 @@ export class PracticeSessionsETL extends BaseETLProcess {
     // Determine end time based on practice time
     const endTime = this.calculateEndTime(sessionTime);
 
+    // Determine team_id based on start time
+    // If start time is 6:30 PM, use team_id = 3, otherwise use team_id = 1
+    // Normalize time format for comparison (handle variations like "6:30 PM", "6:30PM", "6:30 pm")
+    const normalizedTime = sessionTime.trim().replace(/\s+/g, ' ').toUpperCase();
+    const teamId = normalizedTime === '6:30 PM' ? 3 : 1;
+
     return {
       date: sessionDate.toISOString().split('T')[0], // YYYY-MM-DD format
       start_time: sessionTime,
       end_time: endTime,
       session_type: 'Practice' as const,
-      team_id: 1 // Mens Masters team (will be created by Teams ETL)
+      location: 'Ladybird Lake',
+      team_id: teamId
     };
   }
 

@@ -76,10 +76,11 @@ export class UsraCategoriesETL extends BaseETLProcess {
 
     // Add USRowing Youth Categories
     const youthCategories = [
-      { start_age: 0, end_age: 14, category: 'U15 (14 and younger)' },
-      { start_age: 15, end_age: 16, category: 'U17 (16 and younger)' },
-      { start_age: 17, end_age: 18, category: 'U19 (18 and younger)' },
-      { start_age: 19, end_age: 20, category: 'U23 (20 and younger)' }
+      { start_age: 0, end_age: 14, category: 'U15' },
+      { start_age: 15, end_age: 15, category: 'U16' },
+      { start_age: 16, end_age: 16, category: 'U17' },
+      { start_age: 17, end_age: 18, category: 'U19' },
+      { start_age: 19, end_age: 20, category: 'U21' },
     ];
 
     transformedData.push(...youthCategories);
