@@ -31,7 +31,7 @@ const sharedModules = {
    */
   config: () => {
     const configModules: any = {};
-    
+
     // Load env config
     if (config.shared.config.env?.enabled) {
       const envPath = path.resolve(__dirname, '..', '..', config.shared.config.env.path);

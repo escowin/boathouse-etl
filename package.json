@@ -40,7 +40,6 @@
     "seed:practice-sessions": "ts-node src/scripts/seed-practice-sessions.ts",
     "seed:team-memberships": "ts-node src/scripts/seed-team-memberships.ts",
     "seed:production": "ts-node src/scripts/seed-production-from-dev.ts",
-    "recover:from-production": "ts-node src/scripts/recover-from-production.ts",
     "seed:practice-sessions-teams-2-3": "ts-node src/scripts/seed-practice-sessions-teams-2-3.ts",
     "seed:team-memberships-team-2": "ts-node src/scripts/seed-team-memberships-team-2.ts",
     "test:db-connection": "ts-node src/scripts/test-db-connection.ts",
