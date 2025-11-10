@@ -53,7 +53,8 @@
     "fix:athlete-status": "ts-node src/scripts/fix-athlete-status.ts",
     "debug:athletes": "ts-node src/scripts/debug-athletes.ts",
     "seed:set-default-pins": "ts-node src/scripts/set-default-pins.ts",
-    "seed:assign-usra-categories": "ts-node src/scripts/assign-usra-categories.ts"
+    "seed:assign-usra-categories": "ts-node src/scripts/assign-usra-categories.ts",
+    "seed:assign-usra-categories:prod": "node dist/scripts/assign-usra-categories.js"
   },
   "keywords": [],
   "author": "Edwin Escobar",
